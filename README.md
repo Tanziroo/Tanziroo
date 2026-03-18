@@ -1,63 +1,30 @@
-<div align="center">
+# Hey, I'm TanZi 👋
 
-# TanZi · @Tanziroo
+AI explorer turned evidence builder. Started from zero — Ryan (**[@KHET-1](https://github.com/KHET-1)**) dragged me into this world from UAT, and I've been building ever since.
 
-**Builder · Investigator · AI Explorer**
+Currently leading development on forensic tooling for active legal work. The Diggie's know me as **TanZi**.
 
-*FireStar Defense Systems | Case QC-25-32157*
+### What I'm Building
 
----
+- **[fsd-portal](https://github.com/Tanziroo/fsd-portal)** — Forensic evidence portal. Carve logs, SMS timelines, contradictions, 2FA auth. Built for real cases.
+- **[spark-ide](https://github.com/Tanziroo/spark-ide)** — Hex editor + file carver with SHA-256 verification and FireKiss particles. Built for forensic analysis.
+- **[forensic-drift](https://github.com/Tanziroo/forensic-drift)** — Investigation-grade fork of NeuralDrift for legal evidence management.
 
-![GitHub followers](https://img.shields.io/github/followers/Tanziroo?style=flat-square&color=ff6b6b&labelColor=1a1a2e)
-![Profile views](https://komarev.com/ghpvc/?username=Tanziroo&style=flat-square&color=7c3aed)
+### Tech Stack
 
-</div>
+Python • JavaScript • HTML/CSS • Git • Windows + MSYS2 • AI tooling
 
----
+### About Me
 
-## About Me
+- ✨ Newish to dev but building serious tools
+- 🧠 Working with AI every day — Claude, Grok, and whatever else will talk to me
+- 🛡️ FireStar Defense Systems
+- 🎓 UAT connection via Ryan
 
-Hey — I'm **TanZi**. The Diggie's gave me that name.
+### Hit Me Up
 
-I came into the AI world through curiosity and stayed because of the people. I'm here to learn, build, and collaborate — whether you're a noob figuring it out or a smarty-pants who can teach me something new.
+- GitHub: **[@Tanziroo](https://github.com/Tanziroo)**
+- Email: tanzia2.0@gmail.com
+- Always open to collab — especially if you're building something that matters 🚀
 
-Working with my bestie **[@Ryacashm](https://github.com/Ryacashm)** from UAT on some ambitious projects.
-
----
-
-## What I Build
-
-```
-🔎  Forensic tooling & evidence management systems
-🧠  AI-powered investigation dashboards
-💻  Python backends • Vanilla JS frontends
-🛡️  FireStar Defense Systems projects
-```
-
----
-
-## Tech Stack
-
-![Python](https://img.shields.io/badge/Python-1a1a2e?style=flat-square&logo=python&logoColor=ffd700)
-![JavaScript](https://img.shields.io/badge/JavaScript-1a1a2e?style=flat-square&logo=javascript&logoColor=f7df1e)
-![HTML5](https://img.shields.io/badge/HTML5-1a1a2e?style=flat-square&logo=html5&logoColor=e34f26)
-![Git](https://img.shields.io/badge/Git-1a1a2e?style=flat-square&logo=git&logoColor=f05032)
-![Windows](https://img.shields.io/badge/Windows-1a1a2e?style=flat-square&logo=windows&logoColor=0078d4)
-
----
-
-## Projects
-
-| Project | What it does |
-|---------|-------------|
-| **fsd-portal** | Forensic evidence portal — search, timeline, analytics |
-| **spark-ide** | Hex editor with SHA-256, file carving, FireKiss particles |
-| **forensic-drift** | Investigation-grade fork of NeuralDrift |
-
----
-
-<div align="center">
-
-*"The best tools are the ones you build yourself."*
-
-</div>
+![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/Tanziroo/fsd-portal?utm_source=oss&utm_medium=github&utm_campaign=Tanziroo%2Ffsd-portal&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
