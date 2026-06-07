@@ -124,10 +124,10 @@ function makePlaidTexture(){var base='#6e1023',dark='#2a0710',line='#d8c08a';
   var c=document.createElement('canvas');c.width=c.height=64;var x=c.getContext('2d');
   x.fillStyle=base;x.fillRect(0,0,64,64);x.fillStyle=dark;x.globalAlpha=.55;x.fillRect(0,0,32,64);x.fillRect(0,0,64,32);x.globalAlpha=1;
   x.strokeStyle=line;x.lineWidth=2;[10,22,42,54].forEach(function(p){x.beginPath();x.moveTo(p,0);x.lineTo(p,64);x.stroke();x.beginPath();x.moveTo(0,p);x.lineTo(64,p);x.stroke();});
-  var t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(4,4);return t;}
+  var t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(4,4);t.encoding=THREE.sRGBEncoding;return t;}
 function makeStripeTexture(){var c=document.createElement('canvas');c.width=16;c.height=32;var x=c.getContext('2d');
   for(var i=0;i<8;i++){x.fillStyle=i%2?'#1a1a1a':'#dddddd';x.fillRect(0,i*4,16,4);}
-  var t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(1,8);return t;}
+  var t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(1,8);t.encoding=THREE.sRGBEncoding;return t;}
 function makeMaterial(color,finish){ finish=finish||'matte';
   switch(finish){
     case 'leather': return new THREE.MeshStandardMaterial({color:color,roughness:0.22,metalness:0.15});
@@ -339,14 +339,32 @@ var canvas=document.getElementById('scene');
 var renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true});
 renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
 renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
-var scene=new THREE.Scene();scene.background=new THREE.Color(0x0b0a10);scene.fog=new THREE.Fog(0x0b0a10,4,9);
+// Colour management: without this, dark PBR colours read as flat grey speculars.
+renderer.outputEncoding=THREE.sRGBEncoding;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.15;
+var scene=new THREE.Scene();scene.background=new THREE.Color(0x0b0a10);scene.fog=new THREE.Fog(0x0b0a10,4.5,10);
 var camera=new THREE.PerspectiveCamera(38,1,0.1,100);camera.position.set(0,1.2,3.0);
 var controls=new THREE.OrbitControls(camera,canvas);controls.target.set(0,1.0,0);controls.enableDamping=true;controls.minDistance=1.3;controls.maxDistance=6;controls.maxPolarAngle=Math.PI*0.92;
-scene.add(new THREE.HemisphereLight(0x4a4660,0x080810,0.5));
-var key=new THREE.SpotLight(0xffffff,60,20,Math.PI/6,0.4,1.5);key.position.set(2.5,4,3);key.castShadow=true;key.shadow.mapSize.set(1024,1024);key.shadow.bias=-0.0004;scene.add(key,key.target);
-var rm=new THREE.PointLight(0xff2e88,30,12,2);rm.position.set(-2.5,1.6,-1.5);scene.add(rm);
-var rc=new THREE.PointLight(0x21d4fd,26,12,2);rc.position.set(2.4,1.4,-1.8);scene.add(rc);
-var fill=new THREE.DirectionalLight(0x8a8fb0,0.4);fill.position.set(-1,2,2);scene.add(fill);
+
+// Environment map (gradient + two coloured glows) so glossy materials have
+// something to reflect — this is what makes colour + form actually read.
+function buildEnv(){
+  var c=document.createElement('canvas');c.width=512;c.height=256;var x=c.getContext('2d');
+  var g=x.createLinearGradient(0,0,0,256);g.addColorStop(0,'#4a4566');g.addColorStop(0.55,'#1a1726');g.addColorStop(1,'#070710');
+  x.fillStyle=g;x.fillRect(0,0,512,256);
+  x.globalAlpha=0.55;x.fillStyle='#ff2e88';x.beginPath();x.arc(120,140,70,0,7);x.fill();
+  x.fillStyle='#21d4fd';x.beginPath();x.arc(400,110,70,0,7);x.fill();x.globalAlpha=1;
+  var t=new THREE.CanvasTexture(c);t.mapping=THREE.EquirectangularReflectionMapping;t.encoding=THREE.sRGBEncoding;return t;
+}
+var pmrem=new THREE.PMREMGenerator(renderer);pmrem.compileEquirectangularShader();
+scene.environment=pmrem.fromEquirectangular(buildEnv()).texture;
+
+scene.add(new THREE.HemisphereLight(0xbfb9e0,0x16121f,0.9));
+var key=new THREE.SpotLight(0xffffff,90,20,Math.PI/5,0.4,1.5);key.position.set(2.5,4.5,3.2);key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.bias=-0.0004;scene.add(key,key.target);
+var rm=new THREE.PointLight(0xff2e88,55,14,2);rm.position.set(-2.6,1.7,-1.4);scene.add(rm);
+var rc=new THREE.PointLight(0x21d4fd,48,14,2);rc.position.set(2.5,1.5,-1.9);scene.add(rc);
+var fill=new THREE.DirectionalLight(0xb9beff,0.7);fill.position.set(-1.5,2,2.5);scene.add(fill);
 var floor=new THREE.Mesh(new THREE.CircleGeometry(2.2,64),new THREE.MeshStandardMaterial({color:0x111018,roughness:0.35,metalness:0.6}));floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);
 scene.add(new THREE.PolarGridHelper(2.2,16,6,64,0x3a3550,0x201d30));
 var avatar=buildAvatar();scene.add(avatar);
@@ -390,7 +408,11 @@ var countEl=document.getElementById('count');
 function refresh(){ITEMS.forEach(function(item){cards[item.id].el.classList.toggle('equipped',wardrobe.isEquipped(item.id));markColor(item.id,wardrobe.colors[item.id]);});
   countEl.textContent=ITEMS.length+' pieces · '+Object.keys(wardrobe.mounted).length+' worn';}
 
-wardrobe.applyPreset(PRESETS[0]);refresh();
+// Vivid, textured starting look: magenta corset + plaid skirt + striped tights
+// + violet platforms + pink choker + cat ears — shows colour AND texture at a glance.
+wardrobe.colors.corset=0xc01f7b;wardrobe.colors.platform=0x5b2a86;wardrobe.colors.choker=0xff9ec7;wardrobe.colors.ears=0x2a1430;
+['corset','plaid','stripe','platform','choker','ears'].forEach(function(id){wardrobe.equip(id);});
+refresh();
 
 /* ---------------- loop ---------------- */
 function resize(){var w=canvas.clientWidth,h=canvas.clientHeight;if(canvas.width!==w||canvas.height!==h){renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}}

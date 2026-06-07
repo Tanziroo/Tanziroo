@@ -48,6 +48,7 @@ export function makePlaidTexture(base = '#6e1023', dark = '#2a0710', line = '#d8
   const tex = new THREE.CanvasTexture(c);
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
   tex.repeat.set(4, 4);
+  tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
 }
 

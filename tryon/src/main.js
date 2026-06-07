@@ -11,10 +11,32 @@ const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.15;
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x0b0a10);
-scene.fog = new THREE.Fog(0x0b0a10, 4, 9);
+scene.fog = new THREE.Fog(0x0b0a10, 4.5, 10);
+
+// Environment map so glossy goth materials have something to reflect.
+function buildEnv() {
+  const c = document.createElement('canvas');
+  c.width = 512; c.height = 256;
+  const x = c.getContext('2d');
+  const g = x.createLinearGradient(0, 0, 0, 256);
+  g.addColorStop(0, '#4a4566'); g.addColorStop(0.55, '#1a1726'); g.addColorStop(1, '#070710');
+  x.fillStyle = g; x.fillRect(0, 0, 512, 256);
+  x.globalAlpha = 0.55;
+  x.fillStyle = '#ff2e88'; x.beginPath(); x.arc(120, 140, 70, 0, 7); x.fill();
+  x.fillStyle = '#21d4fd'; x.beginPath(); x.arc(400, 110, 70, 0, 7); x.fill();
+  x.globalAlpha = 1;
+  const t = new THREE.CanvasTexture(c);
+  t.mapping = THREE.EquirectangularReflectionMapping;
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromEquirectangular(buildEnv()).texture;
 
 const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
 camera.position.set(0, 1.2, 3.0);
@@ -27,25 +49,25 @@ controls.maxDistance = 6;
 controls.maxPolarAngle = Math.PI * 0.92;
 
 // ---- Lighting: dark studio with magenta / cyan rim lights ------------------
-scene.add(new THREE.HemisphereLight(0x4a4660, 0x080810, 0.5));
+scene.add(new THREE.HemisphereLight(0xbfb9e0, 0x16121f, 0.9));
 
-const key = new THREE.SpotLight(0xffffff, 60, 20, Math.PI / 6, 0.4, 1.5);
-key.position.set(2.5, 4, 3);
+const key = new THREE.SpotLight(0xffffff, 90, 20, Math.PI / 5, 0.4, 1.5);
+key.position.set(2.5, 4.5, 3.2);
 key.castShadow = true;
-key.shadow.mapSize.set(1024, 1024);
+key.shadow.mapSize.set(2048, 2048);
 key.shadow.bias = -0.0004;
 scene.add(key, key.target);
 
-const rimMagenta = new THREE.PointLight(0xff2e88, 30, 12, 2);
-rimMagenta.position.set(-2.5, 1.6, -1.5);
+const rimMagenta = new THREE.PointLight(0xff2e88, 55, 14, 2);
+rimMagenta.position.set(-2.6, 1.7, -1.4);
 scene.add(rimMagenta);
 
-const rimCyan = new THREE.PointLight(0x21d4fd, 26, 12, 2);
-rimCyan.position.set(2.4, 1.4, -1.8);
+const rimCyan = new THREE.PointLight(0x21d4fd, 48, 14, 2);
+rimCyan.position.set(2.5, 1.5, -1.9);
 scene.add(rimCyan);
 
-const fill = new THREE.DirectionalLight(0x8a8fb0, 0.4);
-fill.position.set(-1, 2, 2);
+const fill = new THREE.DirectionalLight(0xb9beff, 0.7);
+fill.position.set(-1.5, 2, 2.5);
 scene.add(fill);
 
 // ---- Floor (reflective-looking disc + grid) --------------------------------
@@ -91,16 +113,17 @@ buildUI(wardrobe, {
   onTurntable: () => { turntable = !turntable; return turntable; },
 });
 
-// Start on a styled look so the avatar is never naked on load.
-import('./catalog.js').then(({ PRESETS }) => {
-  wardrobe.applyPreset(PRESETS[0]);
+// Start on a vivid, textured look so colour + texture read immediately.
+{
+  Object.assign(wardrobe.colors, { corset: 0xc01f7b, platform: 0x5b2a86, choker: 0xff9ec7, ears: 0x2a1430 });
+  ['corset', 'plaid', 'stripe', 'platform', 'choker', 'ears'].forEach((id) => wardrobe.equip(id));
   // reflect initial state in the UI
   document.querySelectorAll('.card').forEach((c) => {
     c.classList.toggle('equipped', wardrobe.isEquipped(c.dataset.id));
   });
   document.getElementById('count').textContent =
     `${ITEMS.length} pieces · ${Object.keys(wardrobe.mounted).length} worn`;
-});
+}
 
 // ---- Resize + render loop ---------------------------------------------------
 function resize() {

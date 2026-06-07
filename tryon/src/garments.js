@@ -329,7 +329,7 @@ export function stripedTights(color, finish = 'matte') {
   const c = document.createElement('canvas'); c.width = 16; c.height = 32;
   const ctx = c.getContext('2d');
   for (let i = 0; i < 8; i++) { ctx.fillStyle = i % 2 ? '#1a1a1a' : '#dddddd'; ctx.fillRect(0, i * 4, 16, 4); }
-  const tex = new THREE.CanvasTexture(c); tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(1, 8);
+  const tex = new THREE.CanvasTexture(c); tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(1, 8); tex.colorSpace = THREE.SRGBColorSpace;
   const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.8, side: DBL, color });
   [-1, 1].forEach((s) => g.add(legTube(s, mat, { pad: 0.004, topY: P.hipY - 0.04, botY: P.ankleY })));
   return g;
