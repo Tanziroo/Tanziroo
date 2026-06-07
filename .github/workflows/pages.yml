@@ -1,0 +1,45 @@
+name: Deploy Crypt Couture to GitHub Pages
+
+# Publishes the tryon/ app to GitHub Pages on every push to main.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tryon/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+        with:
+          # Turns Pages on automatically if it isn't already.
+          enablement: true
+
+      - name: Upload the app as the site root
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./tryon
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
