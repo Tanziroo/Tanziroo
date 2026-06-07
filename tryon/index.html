@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crypt Couture · 3D Goth & Industrial Try-On</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div id="app">
+    <aside id="sidebar">
+      <header>
+        <h1>⛧ Crypt Couture</h1>
+        <p class="sub">Goth &amp; Industrial · mix &amp; match in 3D</p>
+        <p class="sub" id="count">loading…</p>
+      </header>
+      <div id="panel"></div>
+      <footer>
+        Drag to rotate · scroll to zoom · click a piece to wear it · click swatches to recolour
+      </footer>
+    </aside>
+    <main id="stage">
+      <canvas id="scene"></canvas>
+    </main>
+  </div>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
