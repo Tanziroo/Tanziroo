@@ -5,9 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>Crypt Couture · 3D Goth & Industrial Try-On</title>
 <!-- Classic (non-module) Three.js so this single file runs from anywhere,
-     including GitHub's HTML preview and a phone browser. -->
-<script src="https://unpkg.com/three@0.147.0/build/three.min.js"></script>
-<script src="https://unpkg.com/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+     including GitHub's HTML preview and a phone browser.
+     Loaded by the bootstrap at the bottom with multi-CDN fallback. -->
 <style>
 :root{--bg:#0b0a10;--panel:#141220;--panel-2:#1c1930;--ink:#ece9f5;--muted:#9c97b8;--accent:#ff2e88;--accent-2:#21d4fd;--line:#2a2740;}
 *{box-sizing:border-box;}
@@ -58,9 +57,55 @@ body{background:var(--bg);color:var(--ink);font-family:'Trebuchet MS','Segoe UI'
   <main id="stage"><canvas id="scene"></canvas></main>
 </div>
 
+<div id="boot" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#0b0a10;color:#9c97b8;font-family:'Trebuchet MS',system-ui,sans-serif;text-align:center;padding:24px;z-index:50;">
+  <div>
+    <div style="font-size:26px;background:linear-gradient(90deg,#ff2e88,#21d4fd);-webkit-background-clip:text;background-clip:text;color:transparent;">⛧ Crypt Couture</div>
+    <div id="bootmsg" style="margin-top:12px;font-size:14px;">Loading the 3D engine…</div>
+  </div>
+</div>
+
 <script>
+/* ---- bootstrap: load Three.js + OrbitControls with multi-CDN fallback ---- */
 (function(){
+  var msg=document.getElementById('bootmsg');
+  function loadScript(urls,done){
+    var i=0;
+    (function tryNext(){
+      if(i>=urls.length){done(new Error('all CDNs failed'));return;}
+      var s=document.createElement('script');
+      s.src=urls[i++];
+      s.onload=function(){done(null);};
+      s.onerror=function(){tryNext();};
+      document.head.appendChild(s);
+    })();
+  }
+  // WebGL support check
+  try{
+    var t=document.createElement('canvas');
+    if(!(t.getContext('webgl')||t.getContext('experimental-webgl'))) throw 0;
+  }catch(e){ msg.innerHTML='This browser has WebGL disabled.<br>Enable hardware acceleration / try Chrome.'; return; }
+
+  loadScript([
+    'https://unpkg.com/three@0.147.0/build/three.min.js',
+    'https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/three.js/0.147.0/three.min.js'
+  ], function(err){
+    if(err||!window.THREE){ msg.innerHTML='Couldn\'t load the 3D library.<br>Check your connection and reload.'; return; }
+    loadScript([
+      'https://unpkg.com/three@0.147.0/examples/js/controls/OrbitControls.js',
+      'https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js'
+    ], function(err2){
+      // OrbitControls is optional-ish; start anyway, but it's tiny so should load.
+      var b=document.getElementById('boot'); if(b) b.parentNode.removeChild(b);
+      try{ startApp(); }
+      catch(e3){ document.body.insertAdjacentHTML('beforeend','<div style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#0b0a10;color:#ff6b9d;font-family:system-ui;padding:24px;text-align:center;z-index:60;">Something went wrong starting the studio:<br>'+(e3&&e3.message||e3)+'</div>'); }
+    });
+  });
+})();
+
+function startApp(){
 "use strict";
+if(typeof THREE.OrbitControls!=='function'){ THREE.OrbitControls=function(cam){this.target=new THREE.Vector3();this.update=function(){};this.enableDamping=false;}; }
 var DBL = THREE.DoubleSide, TWO = Math.PI*2;
 
 /* ---------------- proportions ---------------- */
@@ -351,7 +396,7 @@ wardrobe.applyPreset(PRESETS[0]);refresh();
 function resize(){var w=canvas.clientWidth,h=canvas.clientHeight;if(canvas.width!==w||canvas.height!==h){renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}}
 var clock=new THREE.Clock();
 (function tick(){var dt=clock.getDelta();if(turntable)avatar.rotation.y+=dt*0.35;resize();controls.update();renderer.render(scene,camera);requestAnimationFrame(tick);})();
-})();
+}
 </script>
 </body>
 </html>
