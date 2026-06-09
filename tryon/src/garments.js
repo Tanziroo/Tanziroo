@@ -84,6 +84,16 @@ export function corset(color, finish = 'leather') {
     l.position.set(x, y, 0.16);
     g.add(l);
   }
+  // vertical boning seams
+  const bone = new THREE.MeshStandardMaterial({ color: new THREE.Color(color).multiplyScalar(0.45), roughness: 0.3, metalness: 0.1 });
+  for (let k = -2; k <= 2; k++) {
+    if (k === 0) continue;
+    const ang = k * 0.34, r = 0.150;
+    const bn = shadow(new THREE.Mesh(new THREE.BoxGeometry(0.011, 0.27, 0.015), bone));
+    bn.position.set(Math.sin(ang) * r, P.waistY + 0.045, Math.cos(ang) * r);
+    bn.rotation.y = ang;
+    g.add(bn);
+  }
   return g;
 }
 
@@ -163,6 +173,16 @@ export function leatherJacket(color, finish = 'leather') {
     stud.position.set(-0.10, P.shoulderY - 0.10 - i * 0.02, 0.16);
     g.add(stud);
   }
+  // peaked lapels + cuffs
+  [-1, 1].forEach((s) => {
+    const lap = shadow(new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.24, 0.02), mat));
+    lap.position.set(s * 0.075, P.chestY + 0.03, 0.135);
+    lap.rotation.z = s * 0.32; lap.rotation.y = -s * 0.30;
+    const cf = shadow(new THREE.Mesh(new THREE.TorusGeometry(P.foreArmR + 0.022, 0.013, 8, 18), mat));
+    cf.position.set(s * (P.shoulderX + 0.095), P.shoulderY - 0.555, 0);
+    cf.rotation.y = Math.PI / 2;
+    g.add(lap, cf);
+  });
   return g;
 }
 

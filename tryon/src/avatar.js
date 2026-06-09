@@ -44,26 +44,39 @@ export function buildAvatar() {
   head.position.set(0, P.headY, 0);
   head.scale.set(0.92, 1.08, 0.95);
 
-  // hair: back volume + fringe
+  // hair: back volume + blunt bangs + long back + long front strands
   const hairBack = add(new THREE.Mesh(new THREE.SphereGeometry(P.headR + 0.02, 24, 20), HAIR));
   hairBack.position.set(0, P.headY + 0.01, -0.015);
   hairBack.scale.set(1.05, 1.18, 1.05);
-  // carve the face by hiding front with a flattened scale + a fringe slab
-  const fringe = add(new THREE.Mesh(new THREE.BoxGeometry(0.19, 0.07, 0.12), HAIR));
-  fringe.position.set(0, P.headY + 0.07, 0.045);
-  fringe.rotation.x = -0.15;
-  // long side strands
+  const fringe = add(new THREE.Mesh(new THREE.BoxGeometry(0.205, 0.085, 0.11), HAIR));
+  fringe.position.set(0, P.headY + 0.058, 0.042);
+  fringe.rotation.x = -0.12;
+  const backLen = add(new THREE.Mesh(new THREE.BoxGeometry(0.215, 0.42, 0.13), HAIR));
+  backLen.position.set(0, P.headY - 0.19, -0.05);
   [-1, 1].forEach((s) => {
-    const strand = add(new THREE.Mesh(new THREE.CapsuleGeometry(0.035, 0.22, 6, 10), HAIR));
-    strand.position.set(s * 0.095, P.headY - 0.12, 0.02);
+    const strand = add(new THREE.Mesh(new THREE.CapsuleGeometry(0.046, 0.34, 8, 12), HAIR));
+    strand.position.set(s * 0.108, P.headY - 0.19, 0.015);
   });
 
-  // simple eyes
-  const eyeMat = new THREE.MeshStandardMaterial({ color: 0x1a1a22, roughness: 0.3 });
+  // face: eyes with iris, winged eyeliner, brows, nose, lips
+  const eyeW = new THREE.MeshStandardMaterial({ color: 0xf2eef5, roughness: 0.3 });
+  const iris = new THREE.MeshStandardMaterial({ color: 0x4b2e6b, roughness: 0.25 });
+  const liner = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.4 });
+  const lipMat = new THREE.MeshStandardMaterial({ color: 0x8a1f3a, roughness: 0.38 });
   [-1, 1].forEach((s) => {
-    const eye = add(new THREE.Mesh(new THREE.SphereGeometry(0.013, 12, 12), eyeMat));
-    eye.position.set(s * 0.038, P.headY + 0.01, P.headR * 0.92);
+    const w = add(new THREE.Mesh(new THREE.SphereGeometry(0.017, 14, 12), eyeW));
+    w.position.set(s * 0.040, P.headY + 0.012, P.headR * 0.90); w.scale.set(1.2, 0.82, 0.6);
+    const ir = add(new THREE.Mesh(new THREE.SphereGeometry(0.0085, 12, 12), iris));
+    ir.position.set(s * 0.044, P.headY + 0.012, P.headR * 0.965);
+    const ln = add(new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.006, 0.01), liner));
+    ln.position.set(s * 0.040, P.headY + 0.03, P.headR * 0.92); ln.rotation.z = -s * 0.18;
+    const br = add(new THREE.Mesh(new THREE.BoxGeometry(0.042, 0.008, 0.012), HAIR));
+    br.position.set(s * 0.043, P.headY + 0.052, P.headR * 0.89); br.rotation.z = -s * 0.12;
   });
+  const nose = add(new THREE.Mesh(new THREE.SphereGeometry(0.016, 12, 10), SKIN));
+  nose.position.set(0, P.headY - 0.018, P.headR * 0.95); nose.scale.set(0.7, 1.2, 1.3);
+  const lip = add(new THREE.Mesh(new THREE.SphereGeometry(0.024, 16, 10), lipMat));
+  lip.position.set(0, P.headY - 0.055, P.headR * 0.90); lip.scale.set(1.45, 0.62, 0.6);
 
   // --- Arms (slightly out, hanging) ---
   function limb(rTop, rBot, len) {
