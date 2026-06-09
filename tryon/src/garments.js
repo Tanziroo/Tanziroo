@@ -217,6 +217,22 @@ export function harness(color, finish = 'leather') {
   loop.position.set(0, P.neckY + 0.02, 0.0);
   loop.scale.set(1, 1, 0.7);
   g.add(loop);
+  // waist O-ring band + connector rings at strap junctions
+  const wband = shadow(new THREE.Mesh(new THREE.TorusGeometry(0.150, 0.011, 8, 28), mat));
+  wband.rotation.x = Math.PI / 2; wband.position.y = P.waistY + 0.02; wband.scale.set(1, 0.88, 1);
+  g.add(wband);
+  [[0, P.chestY + 0.06], [0, P.chestY - 0.10]].forEach(([px, py]) => {
+    const or = shadow(new THREE.Mesh(new THREE.TorusGeometry(0.018, 0.006, 8, 16), metal));
+    or.position.set(px, py, 0.145);
+    g.add(or);
+  });
+  [-1, 1].forEach((s) => {
+    const sr = shadow(new THREE.Mesh(new THREE.TorusGeometry(0.013, 0.005, 8, 14), metal));
+    sr.position.set(s * 0.10, P.waistY + 0.02, 0.135); sr.rotation.y = Math.PI / 2;
+    const connect = shadow(new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.13, 0.018), mat));
+    connect.position.set(s * 0.085, P.chestY - 0.10, 0.135);
+    g.add(sr, connect);
+  });
   return g;
 }
 
@@ -317,16 +333,27 @@ export function leatherPants(color, finish = 'leather') {
 export function cargoPants(color, finish = 'matte') {
   const g = group('cargoPants');
   const mat = makeMaterial(color, finish);
+  const dk = makeMaterial(0x111111, 'matte');
+  const metal = makeMaterial(0xc9ccd1, 'metal');
   [-1, 1].forEach((s) => {
     g.add(legTube(s, mat, { pad: 0.03, botY: P.ankleY }));
-    // side cargo pocket
-    const pkt = shadow(new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.10, 0.05), mat));
-    pkt.position.set(s * (P.legX + 0.10), P.kneeY + 0.12, 0);
-    g.add(pkt);
-    // strap detail
-    const strap = shadow(new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.02, 0.10), makeMaterial(0x111111, 'matte')));
-    strap.position.set(s * P.legX, P.kneeY + 0.04, 0);
-    g.add(strap);
+    // thigh cargo pocket with flap
+    const pkt = shadow(new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.11, 0.06), mat));
+    pkt.position.set(s * (P.legX + 0.105), P.kneeY + 0.14, 0);
+    const flap = shadow(new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.03, 0.065), dk));
+    flap.position.set(s * (P.legX + 0.105), P.kneeY + 0.195, 0);
+    // lower knee pocket
+    const pkt2 = shadow(new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.08, 0.055), mat));
+    pkt2.position.set(s * (P.legX + 0.105), P.kneeY - 0.10, 0);
+    g.add(pkt, flap, pkt2);
+    // buckle straps around the calf
+    [0.0, -0.16].forEach((dy) => {
+      const strap = shadow(new THREE.Mesh(new THREE.TorusGeometry(P.calfR + 0.035, 0.01, 8, 22), dk));
+      strap.rotation.x = Math.PI / 2; strap.position.set(s * P.legX, P.kneeY - 0.04 + dy, 0);
+      const bk = shadow(new THREE.Mesh(new THREE.BoxGeometry(0.022, 0.022, 0.012), metal));
+      bk.position.set(s * P.legX, P.kneeY - 0.04 + dy, P.calfR + 0.04);
+      g.add(strap, bk);
+    });
   });
   const hips = shadow(new THREE.Mesh(new THREE.SphereGeometry(0.185, 20, 14), mat));
   hips.position.set(0, P.hipY - 0.05, 0);

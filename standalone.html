@@ -177,7 +177,9 @@ function buildAvatar(){
     var up=add(new THREE.Mesh(new THREE.CapsuleGeometry((P.upperArmR+P.foreArmR)/2,0.26,8,14),SKIN));up.position.set(s*(P.shoulderX+0.03),P.shoulderY-0.16,0);up.rotation.z=s*0.14;
     var el=add(new THREE.Mesh(new THREE.SphereGeometry(0.045,14,12),SKIN));el.position.set(s*(P.shoulderX+0.07),P.shoulderY-0.30,0);
     var fo=add(new THREE.Mesh(new THREE.CapsuleGeometry((P.foreArmR+0.034)/2,0.24,8,14),SKIN));fo.position.set(s*(P.shoulderX+0.085),P.shoulderY-0.44,0);fo.rotation.z=s*0.10;
-    var ha=add(new THREE.Mesh(new THREE.SphereGeometry(0.045,14,12),SKIN));ha.position.set(s*(P.shoulderX+0.10),P.shoulderY-0.57,0);ha.scale.set(0.8,1.3,0.5);
+    var palm=add(new THREE.Mesh(new THREE.BoxGeometry(0.05,0.075,0.026),SKIN));palm.position.set(s*(P.shoulderX+0.10),P.shoulderY-0.555,0);palm.rotation.z=s*0.10;
+    var fing=add(new THREE.Mesh(new THREE.BoxGeometry(0.046,0.05,0.022),SKIN));fing.position.set(s*(P.shoulderX+0.105),P.shoulderY-0.605,0);fing.rotation.z=s*0.10;
+    var thumb=add(new THREE.Mesh(new THREE.CapsuleGeometry(0.012,0.03,4,8),SKIN));thumb.position.set(s*(P.shoulderX+0.075),P.shoulderY-0.55,0.012);thumb.rotation.z=s*0.6;
   });
   [-1,1].forEach(function(s){
     var th=add(new THREE.Mesh(new THREE.CapsuleGeometry(P.thighR,0.34,8,14),SKIN));th.position.set(s*P.legX,(P.hipY+P.kneeY)/2+0.02,0);th.scale.set(1,1,0.95);
@@ -237,7 +239,13 @@ G.harness=function(c,f){var g=group('harness');var m=makeMaterial(c,f||'leather'
   var ring=S(new THREE.Mesh(new THREE.TorusGeometry(0.03,0.008,8,18),metal));ring.position.set(0,P.chestY,0.15);g.add(ring);
   [-1,1].forEach(function(s){var v=strap(0.022,0.18,0.02);v.position.set(s*0.05,P.chestY+0.06,0.14);g.add(v);
     var d=strap(0.022,0.20,0.02);d.position.set(s*0.10,P.chestY-0.02,0.12);d.rotation.z=s*0.5;g.add(d);});
-  var loop=S(new THREE.Mesh(new THREE.TorusGeometry(0.06,0.011,8,24),m));loop.rotation.x=Math.PI/2;loop.position.set(0,P.neckY+0.02,0);loop.scale.set(1,1,0.7);g.add(loop);return g;};
+  var loop=S(new THREE.Mesh(new THREE.TorusGeometry(0.06,0.011,8,24),m));loop.rotation.x=Math.PI/2;loop.position.set(0,P.neckY+0.02,0);loop.scale.set(1,1,0.7);g.add(loop);
+  // waist O-ring band + connector rings at strap junctions
+  var wband=S(new THREE.Mesh(new THREE.TorusGeometry(0.150,0.011,8,28),m));wband.rotation.x=Math.PI/2;wband.position.y=P.waistY+0.02;wband.scale.set(1,0.88,1);g.add(wband);
+  [[0,P.chestY+0.06],[0,P.chestY-0.10]].forEach(function(p){var or=S(new THREE.Mesh(new THREE.TorusGeometry(0.018,0.006,8,16),metal));or.position.set(p[0],p[1],0.145);g.add(or);});
+  [-1,1].forEach(function(s){var sr=S(new THREE.Mesh(new THREE.TorusGeometry(0.013,0.005,8,14),metal));sr.position.set(s*0.10,P.waistY+0.02,0.135);sr.rotation.y=Math.PI/2;g.add(sr);
+    var connect=S(new THREE.Mesh(new THREE.BoxGeometry(0.02,0.13,0.018),m));connect.position.set(s*0.085,P.chestY-0.10,0.135);g.add(connect);});
+  return g;};
 G.trenchCoat=function(c,f){var g=group('trenchCoat');var m=makeMaterial(c,f||'leather');m.side=DBL;
   g.add(openShell(0.165,0.205,P.shoulderY-(P.kneeY-0.02),(P.shoulderY+P.kneeY-0.02)/2,m,0.8));
   g.add(openShell(0.10,0.08,0.10,P.neckY+0.01,m,0.9));
@@ -258,10 +266,16 @@ G.miniSkirt=function(c,f){var g=group('miniSkirt');var m=makeMaterial(c,f||'leat
 G.leatherPants=function(c,f){var g=group('leatherPants');var m=makeMaterial(c,f||'leather');
   [-1,1].forEach(function(s){g.add(legTube(s,m,{pad:0.014,botY:P.ankleY}));});
   var h=S(new THREE.Mesh(new THREE.SphereGeometry(0.17,20,14),m));h.position.set(0,P.hipY-0.05,0);h.scale.set(1,0.7,0.9);g.add(h);return g;};
-G.cargoPants=function(c,f){var g=group('cargoPants');var m=makeMaterial(c,f||'matte');
+G.cargoPants=function(c,f){var g=group('cargoPants');var m=makeMaterial(c,f||'matte');var dk=makeMaterial(0x111111,'matte');var metal=makeMaterial(0xc9ccd1,'metal');
   [-1,1].forEach(function(s){g.add(legTube(s,m,{pad:0.03,botY:P.ankleY}));
-    var p=S(new THREE.Mesh(new THREE.BoxGeometry(0.06,0.10,0.05),m));p.position.set(s*(P.legX+0.10),P.kneeY+0.12,0);g.add(p);
-    var st=S(new THREE.Mesh(new THREE.BoxGeometry(0.10,0.02,0.10),makeMaterial(0x111111,'matte')));st.position.set(s*P.legX,P.kneeY+0.04,0);g.add(st);});
+    // thigh cargo pocket with flap
+    var p=S(new THREE.Mesh(new THREE.BoxGeometry(0.075,0.11,0.06),m));p.position.set(s*(P.legX+0.105),P.kneeY+0.14,0);g.add(p);
+    var flap=S(new THREE.Mesh(new THREE.BoxGeometry(0.08,0.03,0.065),dk));flap.position.set(s*(P.legX+0.105),P.kneeY+0.195,0);g.add(flap);
+    // lower knee pocket
+    var p2=S(new THREE.Mesh(new THREE.BoxGeometry(0.06,0.08,0.055),m));p2.position.set(s*(P.legX+0.105),P.kneeY-0.10,0);g.add(p2);
+    // buckle straps around the calf
+    [0.0,-0.16].forEach(function(dy){var strap=S(new THREE.Mesh(new THREE.TorusGeometry(P.calfR+0.035,0.01,8,22),dk));strap.rotation.x=Math.PI/2;strap.position.set(s*P.legX,P.kneeY-0.04+dy,0);g.add(strap);
+      var bk=S(new THREE.Mesh(new THREE.BoxGeometry(0.022,0.022,0.012),metal));bk.position.set(s*P.legX,P.kneeY-0.04+dy,P.calfR+0.04);g.add(bk);});});
   var h=S(new THREE.Mesh(new THREE.SphereGeometry(0.185,20,14),m));h.position.set(0,P.hipY-0.05,0);h.scale.set(1,0.7,0.95);g.add(h);return g;};
 G.fishnets=function(c){var g=group('fishnets');var t=makeFishnetTexture('#0a0a0a',10);
   var m=new THREE.MeshStandardMaterial({map:t,transparent:true,alphaMap:t,roughness:0.7,side:DBL,color:c});

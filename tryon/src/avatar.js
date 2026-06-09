@@ -98,9 +98,12 @@ export function buildAvatar() {
     fore.position.set(s * (P.shoulderX + 0.085), P.shoulderY - 0.44, 0.0);
     fore.rotation.z = s * 0.10;
 
-    const hand = add(new THREE.Mesh(new THREE.SphereGeometry(0.045, 14, 12), SKIN));
-    hand.position.set(s * (P.shoulderX + 0.10), P.shoulderY - 0.57, 0.0);
-    hand.scale.set(0.8, 1.3, 0.5);
+    const palm = add(new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.075, 0.026), SKIN));
+    palm.position.set(s * (P.shoulderX + 0.10), P.shoulderY - 0.555, 0); palm.rotation.z = s * 0.10;
+    const fingers = add(new THREE.Mesh(new THREE.BoxGeometry(0.046, 0.05, 0.022), SKIN));
+    fingers.position.set(s * (P.shoulderX + 0.105), P.shoulderY - 0.605, 0); fingers.rotation.z = s * 0.10;
+    const thumb = add(new THREE.Mesh(new THREE.CapsuleGeometry(0.012, 0.03, 4, 8), SKIN));
+    thumb.position.set(s * (P.shoulderX + 0.075), P.shoulderY - 0.55, 0.012); thumb.rotation.z = s * 0.6;
   });
 
   // --- Legs ---
