@@ -155,10 +155,12 @@ function buildAvatar(){
   var neck=add(new THREE.Mesh(new THREE.CylinderGeometry(P.neckR,P.neckR+0.01,0.09,16),SKIN));neck.position.set(0,P.neckY+0.05,0);
   var head=add(new THREE.Mesh(new THREE.SphereGeometry(P.headR,28,24),SKIN));head.position.set(0,P.headY,0);head.scale.set(0.92,1.08,0.95);
   var hb=add(new THREE.Mesh(new THREE.SphereGeometry(P.headR+0.02,24,20),HAIR));hb.position.set(0,P.headY+0.01,-0.015);hb.scale.set(1.05,1.18,1.05);
-  // hair: blunt bangs + long back + long front strands
-  var fr=add(new THREE.Mesh(new THREE.BoxGeometry(0.205,0.085,0.11),HAIR));fr.position.set(0,P.headY+0.058,0.042);fr.rotation.x=-0.12;
+  // hair: crown volume + parted bangs + long back + side strands framing the face
+  var cap=add(new THREE.Mesh(new THREE.SphereGeometry(P.headR+0.018,24,20),HAIR));cap.position.set(0,P.headY+0.012,-0.02);cap.scale.set(1.06,1.15,1.04);
+  [-1,1].forEach(function(s){var bang=add(new THREE.Mesh(new THREE.BoxGeometry(0.105,0.082,0.10),HAIR));bang.position.set(s*0.052,P.headY+0.056,0.044);bang.rotation.set(-0.14,0,s*0.10);});
   var bk=add(new THREE.Mesh(new THREE.BoxGeometry(0.215,0.42,0.13),HAIR));bk.position.set(0,P.headY-0.19,-0.05);
-  [-1,1].forEach(function(s){var st=add(new THREE.Mesh(new THREE.CapsuleGeometry(0.046,0.34,8,12),HAIR));st.position.set(s*0.108,P.headY-0.19,0.015);});
+  [-1,1].forEach(function(s){var st=add(new THREE.Mesh(new THREE.CapsuleGeometry(0.046,0.34,8,12),HAIR));st.position.set(s*0.108,P.headY-0.19,0.015);
+    var fs=add(new THREE.Mesh(new THREE.CapsuleGeometry(0.022,0.26,6,10),HAIR));fs.position.set(s*0.098,P.headY-0.12,0.055);});
   // face: eyes with iris, winged eyeliner, brows, nose, lips
   var eyeW=new THREE.MeshStandardMaterial({color:0xf2eef5,roughness:0.3});
   var iris=new THREE.MeshStandardMaterial({color:0x4b2e6b,roughness:0.25});
@@ -262,7 +264,10 @@ G.pleatedSkirt=function(c,f){var g=group('pleatedSkirt');
   var sk=S(new THREE.Mesh(geo,m));sk.position.y=(topY+hemY)/2;g.add(sk);
   var wb=S(new THREE.Mesh(new THREE.TorusGeometry(0.152,0.016,8,26),makeMaterial(0x111111,'leather')));wb.rotation.x=Math.PI/2;wb.position.y=topY;g.add(wb);return g;};
 G.miniSkirt=function(c,f){var g=group('miniSkirt');var m=makeMaterial(c,f||'leather');m.side=DBL;
-  g.add(lathe([[0.155,P.hipY-0.01],[0.185,P.hipY-0.07],[0.205,P.hipY-0.18]],m,24));return g;};
+  g.add(lathe([[0.150,P.hipY+0.01],[0.158,P.hipY-0.01],[0.190,P.hipY-0.08],[0.208,P.hipY-0.18]],m,28));
+  var wb=S(new THREE.Mesh(new THREE.TorusGeometry(0.150,0.014,8,28),makeMaterial(0x111111,'leather')));wb.rotation.x=Math.PI/2;wb.position.y=P.hipY+0.01;g.add(wb);
+  var metal=makeMaterial(0xc9ccd1,'metal');var N=14;for(var i=0;i<N;i++){var a=i/N*Math.PI*2;var st=S(new THREE.Mesh(new THREE.SphereGeometry(0.007,8,8),metal));st.position.set(Math.cos(a)*0.150,P.hipY+0.01,Math.sin(a)*0.150);g.add(st);}
+  var dr=S(new THREE.Mesh(new THREE.TorusGeometry(0.016,0.005,8,16),metal));dr.position.set(0.06,P.hipY-0.03,0.150);g.add(dr);return g;};
 G.leatherPants=function(c,f){var g=group('leatherPants');var m=makeMaterial(c,f||'leather');
   [-1,1].forEach(function(s){g.add(legTube(s,m,{pad:0.014,botY:P.ankleY}));});
   var h=S(new THREE.Mesh(new THREE.SphereGeometry(0.17,20,14),m));h.position.set(0,P.hipY-0.05,0);h.scale.set(1,0.7,0.9);g.add(h);return g;};

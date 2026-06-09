@@ -44,18 +44,22 @@ export function buildAvatar() {
   head.position.set(0, P.headY, 0);
   head.scale.set(0.92, 1.08, 0.95);
 
-  // hair: back volume + blunt bangs + long back + long front strands
+  // hair: crown volume + parted bangs + long back + side strands framing the face
   const hairBack = add(new THREE.Mesh(new THREE.SphereGeometry(P.headR + 0.02, 24, 20), HAIR));
   hairBack.position.set(0, P.headY + 0.01, -0.015);
   hairBack.scale.set(1.05, 1.18, 1.05);
-  const fringe = add(new THREE.Mesh(new THREE.BoxGeometry(0.205, 0.085, 0.11), HAIR));
-  fringe.position.set(0, P.headY + 0.058, 0.042);
-  fringe.rotation.x = -0.12;
+  [-1, 1].forEach((s) => {
+    const bang = add(new THREE.Mesh(new THREE.BoxGeometry(0.105, 0.082, 0.10), HAIR));
+    bang.position.set(s * 0.052, P.headY + 0.056, 0.044);
+    bang.rotation.set(-0.14, 0, s * 0.10);
+  });
   const backLen = add(new THREE.Mesh(new THREE.BoxGeometry(0.215, 0.42, 0.13), HAIR));
   backLen.position.set(0, P.headY - 0.19, -0.05);
   [-1, 1].forEach((s) => {
     const strand = add(new THREE.Mesh(new THREE.CapsuleGeometry(0.046, 0.34, 8, 12), HAIR));
     strand.position.set(s * 0.108, P.headY - 0.19, 0.015);
+    const faceStrand = add(new THREE.Mesh(new THREE.CapsuleGeometry(0.022, 0.26, 6, 10), HAIR));
+    faceStrand.position.set(s * 0.098, P.headY - 0.12, 0.055);
   });
 
   // face: eyes with iris, winged eyeliner, brows, nose, lips

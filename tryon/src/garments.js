@@ -307,14 +307,30 @@ export function pleatedSkirt(color, finish = 'matte', plaid = true) {
 export function miniSkirt(color, finish = 'leather') {
   const g = group('miniSkirt');
   const mat = makeMaterial(color, finish); mat.side = DBL;
-  const topY = P.hipY - 0.01;
+  const topY = P.hipY + 0.01;
   const hemY = P.hipY - 0.18;
   const pts = [
-    new THREE.Vector2(0.155, topY),
-    new THREE.Vector2(0.185, topY - 0.06),
-    new THREE.Vector2(0.205, hemY),
+    new THREE.Vector2(0.150, topY),
+    new THREE.Vector2(0.158, topY - 0.02),
+    new THREE.Vector2(0.190, P.hipY - 0.08),
+    new THREE.Vector2(0.208, hemY),
   ];
-  g.add(shadow(new THREE.Mesh(new THREE.LatheGeometry(pts, 24), mat)));
+  g.add(shadow(new THREE.Mesh(new THREE.LatheGeometry(pts, 28), mat)));
+  // waistband + stud row + side D-ring
+  const wb = shadow(new THREE.Mesh(new THREE.TorusGeometry(0.150, 0.014, 8, 28), makeMaterial(0x111111, 'leather')));
+  wb.rotation.x = Math.PI / 2; wb.position.y = topY;
+  g.add(wb);
+  const metal = makeMaterial(0xc9ccd1, 'metal');
+  const N = 14;
+  for (let i = 0; i < N; i++) {
+    const a = (i / N) * Math.PI * 2;
+    const stud = shadow(new THREE.Mesh(new THREE.SphereGeometry(0.007, 8, 8), metal));
+    stud.position.set(Math.cos(a) * 0.150, topY, Math.sin(a) * 0.150);
+    g.add(stud);
+  }
+  const dring = shadow(new THREE.Mesh(new THREE.TorusGeometry(0.016, 0.005, 8, 16), metal));
+  dring.position.set(0.06, P.hipY - 0.03, 0.150);
+  g.add(dring);
   return g;
 }
 
