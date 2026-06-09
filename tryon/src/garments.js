@@ -261,20 +261,24 @@ export function pleatedSkirt(color, finish = 'matte', plaid = true) {
   const mat = plaid
     ? new THREE.MeshStandardMaterial({ map: makePlaidTexture(), roughness: 0.85, side: DBL })
     : (() => { const m = makeMaterial(color, finish); m.side = DBL; return m; })();
+  mat.flatShading = true;
   const topY = P.hipY - 0.02;
   const hemY = P.hipY - 0.30;
-  const segs = 20;
-  // faceted (low-segment) flared lathe reads as pleats
-  const pts = [
-    new THREE.Vector2(0.150, topY),
-    new THREE.Vector2(0.175, topY - 0.08),
-    new THREE.Vector2(0.235, hemY + 0.02),
-    new THREE.Vector2(0.245, hemY),
-  ];
-  const geo = new THREE.LatheGeometry(pts, segs);
+  const N = 28;
+  // real accordion pleats: cone shell with alternating radial segments pushed in/out
+  const geo = new THREE.CylinderGeometry(0.155, 0.235, topY - hemY, N, 1, true);
+  const pos = geo.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i), z = pos.getZ(i);
+    const ang = Math.atan2(z, x);
+    const seg = Math.round((ang / (Math.PI * 2)) * N);
+    const r = Math.sqrt(x * x + z * z) * ((seg % 2) ? 0.86 : 1.0);
+    pos.setX(i, Math.cos(ang) * r);
+    pos.setZ(i, Math.sin(ang) * r);
+  }
   geo.computeVertexNormals();
   const skirt = shadow(new THREE.Mesh(geo, mat));
-  skirt.material.flatShading = true;
+  skirt.position.y = (topY + hemY) / 2;
   g.add(skirt);
   // waistband
   const wb = shadow(new THREE.Mesh(new THREE.TorusGeometry(0.152, 0.016, 8, 26), makeMaterial(0x111111, 'leather')));
@@ -374,12 +378,26 @@ export function platformBoots(color, finish = 'leather') {
     const platform = shadow(new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.07, 0.24), sole));
     platform.position.set(s * P.legX, 0.035, 0.05);
     g.add(shaft, foot, platform);
+    // sole tread ridges
+    for (let j = 0; j < 5; j++) {
+      const tr = shadow(new THREE.Mesh(new THREE.BoxGeometry(0.105, 0.012, 0.022), sole));
+      tr.position.set(s * P.legX, 0.012, -0.05 + j * 0.045);
+      g.add(tr);
+    }
     // buckles
     const metal = makeMaterial(0xc9ccd1, 'metal');
     for (let i = 0; i < 3; i++) {
       const bk = shadow(new THREE.Mesh(new THREE.TorusGeometry(0.018, 0.006, 6, 14), metal));
       bk.position.set(s * (P.legX), 0.18 + i * 0.10, P.calfR + 0.02);
       g.add(bk);
+    }
+    // front laces
+    const lace = makeMaterial(0xe8e8e8, 'matte');
+    for (let n = 0; n < 5; n++) {
+      const lc = shadow(new THREE.Mesh(new THREE.CylinderGeometry(0.0035, 0.0035, 0.05, 6), lace));
+      lc.rotation.z = Math.PI / 2;
+      lc.position.set(s * P.legX, 0.155 + n * 0.062, P.calfR + 0.028);
+      g.add(lc);
     }
   });
   return g;

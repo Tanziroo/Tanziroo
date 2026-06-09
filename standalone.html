@@ -245,9 +245,14 @@ G.trenchCoat=function(c,f){var g=group('trenchCoat');var m=makeMaterial(c,f||'le
   var belt=S(new THREE.Mesh(new THREE.TorusGeometry(0.17,0.018,8,28),makeMaterial(0x141414,'leather')));belt.rotation.x=Math.PI/2;belt.position.y=P.waistY;g.add(belt);return g;};
 G.pleatedSkirt=function(c,f){var g=group('pleatedSkirt');
   var m=new THREE.MeshStandardMaterial({map:makePlaidTexture(),roughness:0.85,side:DBL});m.flatShading=true;
-  var geo=new THREE.LatheGeometry([[0.150,P.hipY-0.02],[0.175,P.hipY-0.10],[0.235,P.hipY-0.28],[0.245,P.hipY-0.30]].map(function(p){return new THREE.Vector2(p[0],p[1]);}),20);
-  geo.computeVertexNormals();g.add(S(new THREE.Mesh(geo,m)));
-  var wb=S(new THREE.Mesh(new THREE.TorusGeometry(0.152,0.016,8,26),makeMaterial(0x111111,'leather')));wb.rotation.x=Math.PI/2;wb.position.y=P.hipY-0.02;g.add(wb);return g;};
+  // real accordion pleats: take a cone shell and push alternating radial segments in/out
+  var topY=P.hipY-0.02,hemY=P.hipY-0.30,N=28;
+  var geo=new THREE.CylinderGeometry(0.155,0.235,topY-hemY,N,1,true);
+  var pos=geo.attributes.position;
+  for(var i=0;i<pos.count;i++){var x=pos.getX(i),z=pos.getZ(i);var ang=Math.atan2(z,x);var seg=Math.round(ang/TWO*N);var r=Math.sqrt(x*x+z*z)*((seg%2)?0.86:1.0);pos.setX(i,Math.cos(ang)*r);pos.setZ(i,Math.sin(ang)*r);}
+  geo.computeVertexNormals();
+  var sk=S(new THREE.Mesh(geo,m));sk.position.y=(topY+hemY)/2;g.add(sk);
+  var wb=S(new THREE.Mesh(new THREE.TorusGeometry(0.152,0.016,8,26),makeMaterial(0x111111,'leather')));wb.rotation.x=Math.PI/2;wb.position.y=topY;g.add(wb);return g;};
 G.miniSkirt=function(c,f){var g=group('miniSkirt');var m=makeMaterial(c,f||'leather');m.side=DBL;
   g.add(lathe([[0.155,P.hipY-0.01],[0.185,P.hipY-0.07],[0.205,P.hipY-0.18]],m,24));return g;};
 G.leatherPants=function(c,f){var g=group('leatherPants');var m=makeMaterial(c,f||'leather');
@@ -268,7 +273,9 @@ G.platformBoots=function(c,f){var g=group('platformBoots');var m=makeMaterial(c,
   [-1,1].forEach(function(s){var sh=S(new THREE.Mesh(new THREE.CylinderGeometry(P.calfR+0.018,P.calfR+0.012,P.kneeY-0.10,14),m));sh.position.set(s*P.legX,(P.kneeY-0.10)/2+0.08,0);
     var ft=S(new THREE.Mesh(new THREE.BoxGeometry(0.085,0.07,0.21),m));ft.position.set(s*P.legX,0.10,0.045);
     var pl=S(new THREE.Mesh(new THREE.BoxGeometry(0.10,0.07,0.24),so));pl.position.set(s*P.legX,0.035,0.05);g.add(sh,ft,pl);
-    var metal=makeMaterial(0xc9ccd1,'metal');for(var i=0;i<3;i++){var bk=S(new THREE.Mesh(new THREE.TorusGeometry(0.018,0.006,6,14),metal));bk.position.set(s*P.legX,0.18+i*0.10,P.calfR+0.02);g.add(bk);}});return g;};
+    for(var j=0;j<5;j++){var tr=S(new THREE.Mesh(new THREE.BoxGeometry(0.105,0.012,0.022),so));tr.position.set(s*P.legX,0.012,-0.05+j*0.045);g.add(tr);}
+    var metal=makeMaterial(0xc9ccd1,'metal');for(var i=0;i<3;i++){var bk=S(new THREE.Mesh(new THREE.TorusGeometry(0.018,0.006,6,14),metal));bk.position.set(s*P.legX,0.18+i*0.10,P.calfR+0.02);g.add(bk);}
+    var la=makeMaterial(0xe8e8e8,'matte');for(var n=0;n<5;n++){var lc=S(new THREE.Mesh(new THREE.CylinderGeometry(0.0035,0.0035,0.05,6),la));lc.rotation.z=Math.PI/2;lc.position.set(s*P.legX,0.155+n*0.062,P.calfR+0.028);g.add(lc);}});return g;};
 G.combatBoots=function(c,f){var g=group('combatBoots');var m=makeMaterial(c,f||'leather');var so=makeMaterial(0x0a0a0a,'matte');
   [-1,1].forEach(function(s){var sh=S(new THREE.Mesh(new THREE.CylinderGeometry(P.calfR+0.02,P.calfR+0.01,0.22,14),m));sh.position.set(s*P.legX,0.22,0);
     var ft=S(new THREE.Mesh(new THREE.BoxGeometry(0.085,0.08,0.21),m));ft.position.set(s*P.legX,0.10,0.045);
