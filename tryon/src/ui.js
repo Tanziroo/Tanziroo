@@ -3,8 +3,9 @@ import { ITEMS, SLOTS, PALETTE, PRESETS } from './catalog.js';
 const hex = (n) => '#' + n.toString(16).padStart(6, '0');
 
 // Builds the wardrobe panel and wires it to the Wardrobe instance.
-export function buildUI(wardrobe, { onShuffle, onTurntable } = {}) {
+export function buildUI(wardrobe, { onShuffle, onTurntable, onShare, onChange } = {}) {
   const panel = document.getElementById('panel');
+  let muted = false; // suppress onChange while applying a remote/shared look
 
   // --- Presets row ---
   const presetWrap = document.createElement('div');
@@ -29,6 +30,13 @@ export function buildUI(wardrobe, { onShuffle, onTurntable } = {}) {
     this.textContent = '🔄 Turntable: ' + (on ? 'On' : 'Off');
   });
   actions.appendChild(ttBtn);
+  if (onShare) {
+    const shareBtn = mk('📤 Share look', async function () {
+      const res = await onShare();
+      if (res === 'copied') { const t = this.textContent; this.textContent = '✓ Link copied'; setTimeout(() => { this.textContent = t; }, 1500); }
+    });
+    actions.appendChild(shareBtn);
+  }
   panel.appendChild(actions);
 
   // --- Slot groups (the "swarm" of clothing) ---
@@ -61,7 +69,7 @@ export function buildUI(wardrobe, { onShuffle, onTurntable } = {}) {
         sw.className = 'sw';
         sw.style.background = hex(c.hex);
         sw.title = c.name;
-        sw.onclick = (e) => { e.stopPropagation(); wardrobe.setColor(item.id, c.hex); markColor(item.id, c.hex); };
+        sw.onclick = (e) => { e.stopPropagation(); wardrobe.setColor(item.id, c.hex); refresh(); };
         swatches.appendChild(sw);
       });
 
@@ -92,6 +100,15 @@ export function buildUI(wardrobe, { onShuffle, onTurntable } = {}) {
       markColor(item.id, wardrobe.colors[item.id]);
     });
     updateCount();
+    if (!muted) onChange?.();
+  }
+
+  // apply a look received from a shared link / another device without echoing it back
+  function applyRemote(state) {
+    muted = true;
+    wardrobe.apply(state);
+    refresh();
+    muted = false;
   }
 
   const count = document.getElementById('count');
@@ -101,5 +118,5 @@ export function buildUI(wardrobe, { onShuffle, onTurntable } = {}) {
   }
 
   refresh();
-  return { refresh };
+  return { refresh, applyRemote };
 }

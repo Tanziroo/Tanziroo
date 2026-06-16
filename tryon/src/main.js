@@ -4,6 +4,7 @@ import { buildAvatar } from './avatar.js';
 import { Wardrobe } from './wardrobe.js';
 import { buildUI } from './ui.js';
 import { ITEMS, SLOTS } from './catalog.js';
+import { createSync } from './sync.js';
 
 // ---- Renderer / scene / camera ---------------------------------------------
 const canvas = document.getElementById('scene');
@@ -108,21 +109,27 @@ function shuffle() {
   }
 }
 
-buildUI(wardrobe, {
+let sync = null;
+const ui = buildUI(wardrobe, {
   onShuffle: shuffle,
   onTurntable: () => { turntable = !turntable; return turntable; },
+  onShare: () => sync?.share(wardrobe.serialize()),
+  onChange: () => sync?.push(wardrobe.serialize()),
 });
 
 // Start on a vivid, textured look so colour + texture read immediately.
-{
-  Object.assign(wardrobe.colors, { corset: 0xc01f7b, platform: 0x5b2a86, choker: 0xff9ec7, ears: 0x2a1430 });
-  ['corset', 'plaid', 'stripe', 'platform', 'choker', 'ears'].forEach((id) => wardrobe.equip(id));
-  // reflect initial state in the UI
-  document.querySelectorAll('.card').forEach((c) => {
-    c.classList.toggle('equipped', wardrobe.isEquipped(c.dataset.id));
-  });
-  document.getElementById('count').textContent =
-    `${ITEMS.length} pieces · ${Object.keys(wardrobe.mounted).length} worn`;
+Object.assign(wardrobe.colors, { corset: 0xc01f7b, platform: 0x5b2a86, choker: 0xff9ec7, ears: 0x2a1430 });
+['corset', 'plaid', 'stripe', 'platform', 'choker', 'ears'].forEach((id) => wardrobe.equip(id));
+ui.refresh();
+
+// Live + shareable sync: a shared #look=... link (or another device) overrides
+// the default look; local changes broadcast outward.
+sync = createSync({ onRemote: (state) => ui.applyRemote(state) });
+
+// Installable PWA (only on a real http(s) origin; harmless no-op elsewhere).
+if (typeof navigator !== 'undefined' && navigator.serviceWorker &&
+    typeof location !== 'undefined' && location.protocol.startsWith('http')) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
 }
 
 // ---- Resize + render loop ---------------------------------------------------

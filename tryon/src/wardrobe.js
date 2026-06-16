@@ -87,4 +87,27 @@ export class Wardrobe {
       });
     }
   }
+
+  // ---- sync: compact, serialisable snapshot of the whole look ----
+  serialize() {
+    const equipped = {};
+    for (const s of SLOTS) {
+      const v = this.equipped[s.id];
+      equipped[s.id] = s.multi ? [...v] : v;
+    }
+    return { equipped, colors: { ...this.colors } };
+  }
+
+  apply(state) {
+    if (!state) return;
+    this.clearAll();
+    if (state.colors) Object.assign(this.colors, state.colors);
+    if (state.equipped) {
+      for (const s of SLOTS) {
+        const v = state.equipped[s.id];
+        if (!v) continue;
+        (Array.isArray(v) ? v : [v]).forEach((id) => { if (this.byId[id]) this.equip(id); });
+      }
+    }
+  }
 }

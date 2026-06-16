@@ -4,6 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Crypt Couture · 3D Goth & Industrial Try-On</title>
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <meta name="theme-color" content="#0b0a10" />
+  <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+  <link rel="apple-touch-icon" href="./icon.svg" />
   <style>
 :root {
   --bg: #0b0a10;
@@ -1247,6 +1251,29 @@ class Wardrobe {
       });
     }
   }
+
+  // ---- sync: compact, serialisable snapshot of the whole look ----
+  serialize() {
+    const equipped = {};
+    for (const s of SLOTS) {
+      const v = this.equipped[s.id];
+      equipped[s.id] = s.multi ? [...v] : v;
+    }
+    return { equipped, colors: { ...this.colors } };
+  }
+
+  apply(state) {
+    if (!state) return;
+    this.clearAll();
+    if (state.colors) Object.assign(this.colors, state.colors);
+    if (state.equipped) {
+      for (const s of SLOTS) {
+        const v = state.equipped[s.id];
+        if (!v) continue;
+        (Array.isArray(v) ? v : [v]).forEach((id) => { if (this.byId[id]) this.equip(id); });
+      }
+    }
+  }
 }
 
 
@@ -1259,8 +1286,9 @@ const { ITEMS, SLOTS, PALETTE, PRESETS } = __require('catalog');
 const hex = (n) => '#' + n.toString(16).padStart(6, '0');
 
 // Builds the wardrobe panel and wires it to the Wardrobe instance.
-function buildUI(wardrobe, { onShuffle, onTurntable } = {}) {
+function buildUI(wardrobe, { onShuffle, onTurntable, onShare, onChange } = {}) {
   const panel = document.getElementById('panel');
+  let muted = false; // suppress onChange while applying a remote/shared look
 
   // --- Presets row ---
   const presetWrap = document.createElement('div');
@@ -1285,6 +1313,13 @@ function buildUI(wardrobe, { onShuffle, onTurntable } = {}) {
     this.textContent = '🔄 Turntable: ' + (on ? 'On' : 'Off');
   });
   actions.appendChild(ttBtn);
+  if (onShare) {
+    const shareBtn = mk('📤 Share look', async function () {
+      const res = await onShare();
+      if (res === 'copied') { const t = this.textContent; this.textContent = '✓ Link copied'; setTimeout(() => { this.textContent = t; }, 1500); }
+    });
+    actions.appendChild(shareBtn);
+  }
   panel.appendChild(actions);
 
   // --- Slot groups (the "swarm" of clothing) ---
@@ -1317,7 +1352,7 @@ function buildUI(wardrobe, { onShuffle, onTurntable } = {}) {
         sw.className = 'sw';
         sw.style.background = hex(c.hex);
         sw.title = c.name;
-        sw.onclick = (e) => { e.stopPropagation(); wardrobe.setColor(item.id, c.hex); markColor(item.id, c.hex); };
+        sw.onclick = (e) => { e.stopPropagation(); wardrobe.setColor(item.id, c.hex); refresh(); };
         swatches.appendChild(sw);
       });
 
@@ -1348,6 +1383,15 @@ function buildUI(wardrobe, { onShuffle, onTurntable } = {}) {
       markColor(item.id, wardrobe.colors[item.id]);
     });
     updateCount();
+    if (!muted) onChange?.();
+  }
+
+  // apply a look received from a shared link / another device without echoing it back
+  function applyRemote(state) {
+    muted = true;
+    wardrobe.apply(state);
+    refresh();
+    muted = false;
   }
 
   const count = document.getElementById('count');
@@ -1357,11 +1401,98 @@ function buildUI(wardrobe, { onShuffle, onTurntable } = {}) {
   }
 
   refresh();
-  return { refresh };
+  return { refresh, applyRemote };
 }
 
 
 __exports.buildUI = buildUI;
+};
+
+__defs['sync'] = function(__exports){
+// Live + shareable outfit sync.
+//
+// Every transport is feature-detected, so this module is completely inert in a
+// non-browser context (e.g. the smoke test) and degrades gracefully wherever a
+// given capability is missing.
+//
+// Transports, in order of "no setup -> more setup":
+//   1. URL hash      — the whole look encodes into #look=..., so any link is a
+//                      deep link. Powers "Share look" (native share sheet).
+//   2. localStorage + BroadcastChannel — live sync across tabs/windows on the
+//                      same device.
+//   3. WebSocket room — optional true cross-device live sync. Activated by
+//                      setting window.__SYNC_WS (relay url) and window.__SYNC_ROOM.
+
+const KEY = 'cryptcouture:look';
+const g = typeof globalThis !== 'undefined' ? globalThis : {};
+
+const b64 = {
+  enc: (state) => btoa(unescape(encodeURIComponent(JSON.stringify(state)))),
+  dec: (str) => { try { return JSON.parse(decodeURIComponent(escape(atob(str)))); } catch { return null; } },
+};
+
+function createSync({ onRemote } = {}) {
+  const loc = g.location;
+  const ls = (() => { try { return g.localStorage; } catch { return null; } })();
+  const wsUrl = g.__SYNC_WS;
+  const room = g.__SYNC_ROOM || 'crypt';
+  let bc = null, ws = null, last = '';
+
+  const emit = (code) => { if (code && code !== last) { last = code; const s = b64.dec(code); if (s) onRemote?.(s); } };
+
+  // 1) restore from a shared/deep link on load
+  if (loc && loc.hash && loc.hash.includes('look=')) {
+    const m = loc.hash.match(/look=([^&]+)/);
+    if (m) emit(m[1]);
+  }
+
+  // 2) same-device live across tabs
+  if (ls && g.addEventListener) {
+    g.addEventListener('storage', (e) => { if (e.key === KEY && e.newValue) emit(e.newValue); });
+  }
+  if (typeof g.BroadcastChannel === 'function') {
+    try { bc = new g.BroadcastChannel(KEY); bc.onmessage = (e) => emit(e.data); } catch { /* ignore */ }
+  }
+
+  // 3) optional cross-device live relay
+  function connectWS() {
+    if (!wsUrl || typeof g.WebSocket !== 'function') return;
+    try {
+      ws = new g.WebSocket(wsUrl);
+      ws.onmessage = (e) => { try { const msg = JSON.parse(e.data); if (msg.room === room) emit(msg.code); } catch { /* ignore */ } };
+      ws.onclose = () => setTimeout(connectWS, 2000);
+    } catch { /* ignore */ }
+  }
+  connectWS();
+
+  function push(state) {
+    const code = b64.enc(state);
+    last = code;
+    if (loc && g.history?.replaceState) { try { g.history.replaceState(null, '', '#look=' + code); } catch { /* ignore */ } }
+    if (ls) { try { ls.setItem(KEY, code); } catch { /* ignore */ } }
+    if (bc) { try { bc.postMessage(code); } catch { /* ignore */ } }
+    if (ws && ws.readyState === 1) { try { ws.send(JSON.stringify({ room, code })); } catch { /* ignore */ } }
+  }
+
+  function shareUrl() {
+    if (!loc) return '';
+    return loc.origin + loc.pathname + loc.search + loc.hash;
+  }
+
+  async function share(state) {
+    if (state) push(state);
+    const url = shareUrl();
+    const nav = g.navigator;
+    if (nav?.share) { try { await nav.share({ title: 'Crypt Couture look', url }); return 'shared'; } catch { return 'cancelled'; } }
+    if (nav?.clipboard?.writeText) { try { await nav.clipboard.writeText(url); return 'copied'; } catch { /* ignore */ } }
+    return url;
+  }
+
+  return { push, share, shareUrl, room, live: !!wsUrl };
+}
+
+
+__exports.createSync = createSync;
 };
 
 // ---- entry ----
@@ -1369,6 +1500,7 @@ const { buildAvatar } = __require('avatar');
 const { Wardrobe } = __require('wardrobe');
 const { buildUI } = __require('ui');
 const { ITEMS, SLOTS } = __require('catalog');
+const { createSync } = __require('sync');
 
 // ---- Renderer / scene / camera ---------------------------------------------
 const canvas = document.getElementById('scene');
@@ -1473,21 +1605,27 @@ function shuffle() {
   }
 }
 
-buildUI(wardrobe, {
+let sync = null;
+const ui = buildUI(wardrobe, {
   onShuffle: shuffle,
   onTurntable: () => { turntable = !turntable; return turntable; },
+  onShare: () => sync?.share(wardrobe.serialize()),
+  onChange: () => sync?.push(wardrobe.serialize()),
 });
 
 // Start on a vivid, textured look so colour + texture read immediately.
-{
-  Object.assign(wardrobe.colors, { corset: 0xc01f7b, platform: 0x5b2a86, choker: 0xff9ec7, ears: 0x2a1430 });
-  ['corset', 'plaid', 'stripe', 'platform', 'choker', 'ears'].forEach((id) => wardrobe.equip(id));
-  // reflect initial state in the UI
-  document.querySelectorAll('.card').forEach((c) => {
-    c.classList.toggle('equipped', wardrobe.isEquipped(c.dataset.id));
-  });
-  document.getElementById('count').textContent =
-    `${ITEMS.length} pieces · ${Object.keys(wardrobe.mounted).length} worn`;
+Object.assign(wardrobe.colors, { corset: 0xc01f7b, platform: 0x5b2a86, choker: 0xff9ec7, ears: 0x2a1430 });
+['corset', 'plaid', 'stripe', 'platform', 'choker', 'ears'].forEach((id) => wardrobe.equip(id));
+ui.refresh();
+
+// Live + shareable sync: a shared #look=... link (or another device) overrides
+// the default look; local changes broadcast outward.
+sync = createSync({ onRemote: (state) => ui.applyRemote(state) });
+
+// Installable PWA (only on a real http(s) origin; harmless no-op elsewhere).
+if (typeof navigator !== 'undefined' && navigator.serviceWorker &&
+    typeof location !== 'undefined' && location.protocol.startsWith('http')) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
 }
 
 // ---- Resize + render loop ---------------------------------------------------

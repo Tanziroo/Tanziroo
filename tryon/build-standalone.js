@@ -13,7 +13,7 @@ const SRC = path.join(__dirname, 'src');
 const ROOT = path.join(__dirname, '..');
 
 // Modules in a safe definition order (entry `main` is emitted/run last).
-const MODULES = ['proportions', 'materials', 'garments', 'avatar', 'catalog', 'wardrobe', 'ui'];
+const MODULES = ['proportions', 'materials', 'garments', 'avatar', 'catalog', 'wardrobe', 'ui', 'sync'];
 const ENTRY = 'main';
 
 function read(mod) {
