@@ -152,6 +152,10 @@ function buildAvatar(){
   add(lathe([[0.155,P.hipY-0.04],[0.168,P.hipY+0.02],[0.150,P.hipY+0.07],[0.122,P.waistY],[0.135,P.waistY+0.08],[0.156,P.chestY-0.02],[0.150,P.chestY+0.05],[0.105,P.shoulderY-0.03],[0.070,P.neckY-0.02],[0.056,P.neckY+0.02]],SKIN,32));
   [-1,1].forEach(function(s){var b=add(new THREE.Mesh(new THREE.SphereGeometry(0.072,20,16),SKIN));b.position.set(s*0.062,P.chestY+0.01,0.105);b.scale.set(1,0.9,0.8);});
   var pel=add(new THREE.Mesh(new THREE.SphereGeometry(0.155,24,16),SKIN));pel.position.set(0,P.hipY-0.05,0);pel.scale.set(1,0.7,0.85);
+  // subtle navel + collarbones
+  var deep=new THREE.MeshStandardMaterial({color:0xb98a7a,roughness:0.7});
+  var navel=add(new THREE.Mesh(new THREE.SphereGeometry(0.012,10,8),deep));navel.position.set(0,P.waistY-0.05,0.118);navel.scale.set(1,1.3,0.5);
+  [-1,1].forEach(function(s){var cb=add(new THREE.Mesh(new THREE.CapsuleGeometry(0.007,0.07,4,8),SKIN));cb.position.set(s*0.05,P.shoulderY-0.02,0.092);cb.rotation.set(0,0,s*0.55);});
   var neck=add(new THREE.Mesh(new THREE.CylinderGeometry(P.neckR,P.neckR+0.01,0.09,16),SKIN));neck.position.set(0,P.neckY+0.05,0);
   var head=add(new THREE.Mesh(new THREE.SphereGeometry(P.headR,28,24),SKIN));head.position.set(0,P.headY,0);head.scale.set(0.92,1.08,0.95);
   var hb=add(new THREE.Mesh(new THREE.SphereGeometry(P.headR+0.02,24,20),HAIR));hb.position.set(0,P.headY+0.01,-0.015);hb.scale.set(1.05,1.18,1.05);
@@ -234,7 +238,13 @@ G.leatherJacket=function(c,f){var g=group('leatherJacket');var m=makeMaterial(c,
   [-1,1].forEach(function(s){
     var lap=S(new THREE.Mesh(new THREE.BoxGeometry(0.06,0.24,0.02),m));lap.position.set(s*0.075,P.chestY+0.03,0.135);lap.rotation.z=s*0.32;lap.rotation.y=-s*0.30;g.add(lap);
     var cf=S(new THREE.Mesh(new THREE.TorusGeometry(P.foreArmR+0.022,0.013,8,18),m));cf.position.set(s*(P.shoulderX+0.095),P.shoulderY-0.555,0);cf.rotation.y=Math.PI/2;g.add(cf);
-  });return g;};
+  });
+  // asymmetric moto zipper: offset flap edge + metal zip line + pull tab
+  var midY=(P.shoulderY+P.waistY)/2,zlen=P.shoulderY-P.waistY+0.02;
+  var flap=S(new THREE.Mesh(new THREE.BoxGeometry(0.05,zlen,0.014),m));flap.position.set(0.035,midY,0.152);flap.rotation.z=0.06;g.add(flap);
+  var zip=S(new THREE.Mesh(new THREE.BoxGeometry(0.012,zlen,0.012),metal));zip.position.set(-0.005,midY,0.158);zip.rotation.z=0.06;g.add(zip);
+  var pull=S(new THREE.Mesh(new THREE.BoxGeometry(0.013,0.03,0.01),metal));pull.position.set(-0.01,P.waistY+0.10,0.163);g.add(pull);
+  return g;};
 G.harness=function(c,f){var g=group('harness');var m=makeMaterial(c,f||'leather');var metal=makeMaterial(0xc9ccd1,'metal');
   function strap(w,h,d){return S(new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m));}
   var band=S(new THREE.Mesh(new THREE.TorusGeometry(0.155,0.012,8,28),m));band.rotation.x=Math.PI/2;band.position.y=P.chestY-0.06;band.scale.set(1,0.85,1);g.add(band);

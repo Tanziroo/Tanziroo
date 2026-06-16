@@ -183,6 +183,16 @@ export function leatherJacket(color, finish = 'leather') {
     cf.rotation.y = Math.PI / 2;
     g.add(lap, cf);
   });
+  // asymmetric moto zipper: offset flap edge + metal zip line + pull tab
+  const midY = (P.shoulderY + P.waistY) / 2;
+  const zlen = P.shoulderY - P.waistY + 0.02;
+  const flap = shadow(new THREE.Mesh(new THREE.BoxGeometry(0.05, zlen, 0.014), mat));
+  flap.position.set(0.035, midY, 0.152); flap.rotation.z = 0.06;
+  const zip = shadow(new THREE.Mesh(new THREE.BoxGeometry(0.012, zlen, 0.012), metal));
+  zip.position.set(-0.005, midY, 0.158); zip.rotation.z = 0.06;
+  const pull = shadow(new THREE.Mesh(new THREE.BoxGeometry(0.013, 0.03, 0.01), metal));
+  pull.position.set(-0.01, P.waistY + 0.10, 0.163);
+  g.add(flap, zip, pull);
   return g;
 }
 

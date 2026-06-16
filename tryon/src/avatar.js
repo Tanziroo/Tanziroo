@@ -36,6 +36,15 @@ export function buildAvatar() {
   pelvis.position.set(0, P.hipY - 0.05, 0);
   pelvis.scale.set(1, 0.7, 0.85);
 
+  // subtle navel + collarbones
+  const deep = new THREE.MeshStandardMaterial({ color: 0xb98a7a, roughness: 0.7 });
+  const navel = add(new THREE.Mesh(new THREE.SphereGeometry(0.012, 10, 8), deep));
+  navel.position.set(0, P.waistY - 0.05, 0.118); navel.scale.set(1, 1.3, 0.5);
+  [-1, 1].forEach((s) => {
+    const cb = add(new THREE.Mesh(new THREE.CapsuleGeometry(0.007, 0.07, 4, 8), SKIN));
+    cb.position.set(s * 0.05, P.shoulderY - 0.02, 0.092); cb.rotation.set(0, 0, s * 0.55);
+  });
+
   // --- Neck + head ---
   const neck = add(new THREE.Mesh(new THREE.CylinderGeometry(P.neckR, P.neckR + 0.01, 0.09, 16), SKIN));
   neck.position.set(0, P.neckY + 0.05, 0);
