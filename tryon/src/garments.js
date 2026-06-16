@@ -275,6 +275,18 @@ export function trenchCoat(color, finish = 'leather') {
   belt.rotation.x = Math.PI / 2;
   belt.position.y = P.waistY;
   g.add(belt);
+  const metal = makeMaterial(0xc9ccd1, 'metal');
+  const buckle = shadow(new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.04, 0.02), metal));
+  buckle.position.set(0, P.waistY, 0.175);
+  g.add(buckle);
+  // double-breasted button rows
+  [-1, 1].forEach((s) => {
+    for (let i = 0; i < 4; i++) {
+      const bt = shadow(new THREE.Mesh(new THREE.SphereGeometry(0.011, 10, 8), metal));
+      bt.position.set(s * 0.06, P.chestY + 0.06 - i * 0.075, 0.16);
+      g.add(bt);
+    }
+  });
   return g;
 }
 

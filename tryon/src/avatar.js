@@ -131,8 +131,12 @@ export function buildAvatar() {
     const calf = add(new THREE.Mesh(new THREE.CapsuleGeometry(P.calfR, 0.32, 8, 14), SKIN));
     calf.position.set(s * P.legX, (P.kneeY + P.ankleY) / 2 + 0.02, 0);
 
-    const foot = add(new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.05, 0.18), SKIN));
-    foot.position.set(s * P.legX, P.ankleY - 0.04, 0.04);
+    const foot = add(new THREE.Mesh(new THREE.BoxGeometry(0.068, 0.045, 0.14), SKIN));
+    foot.position.set(s * P.legX, P.ankleY - 0.045, 0.03);
+    const toe = add(new THREE.Mesh(new THREE.BoxGeometry(0.066, 0.032, 0.05), SKIN));
+    toe.position.set(s * P.legX, P.ankleY - 0.052, 0.105); toe.rotation.x = 0.18;
+    const heel = add(new THREE.Mesh(new THREE.SphereGeometry(0.035, 12, 10), SKIN));
+    heel.position.set(s * P.legX, P.ankleY - 0.03, -0.035); heel.scale.set(0.95, 0.85, 1);
   });
 
   return g;

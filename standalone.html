@@ -191,7 +191,9 @@ function buildAvatar(){
     var th=add(new THREE.Mesh(new THREE.CapsuleGeometry(P.thighR,0.34,8,14),SKIN));th.position.set(s*P.legX,(P.hipY+P.kneeY)/2+0.02,0);th.scale.set(1,1,0.95);
     var kn=add(new THREE.Mesh(new THREE.SphereGeometry(0.06,14,12),SKIN));kn.position.set(s*P.legX,P.kneeY,0);
     var ca=add(new THREE.Mesh(new THREE.CapsuleGeometry(P.calfR,0.32,8,14),SKIN));ca.position.set(s*P.legX,(P.kneeY+P.ankleY)/2+0.02,0);
-    var ft=add(new THREE.Mesh(new THREE.BoxGeometry(0.07,0.05,0.18),SKIN));ft.position.set(s*P.legX,P.ankleY-0.04,0.04);
+    var ft=add(new THREE.Mesh(new THREE.BoxGeometry(0.068,0.045,0.14),SKIN));ft.position.set(s*P.legX,P.ankleY-0.045,0.03);
+    var toe=add(new THREE.Mesh(new THREE.BoxGeometry(0.066,0.032,0.05),SKIN));toe.position.set(s*P.legX,P.ankleY-0.052,0.105);toe.rotation.x=0.18;
+    var heel=add(new THREE.Mesh(new THREE.SphereGeometry(0.035,12,10),SKIN));heel.position.set(s*P.legX,P.ankleY-0.03,-0.035);heel.scale.set(0.95,0.85,1);
   });
   return g;
 }
@@ -262,7 +264,11 @@ G.trenchCoat=function(c,f){var g=group('trenchCoat');var m=makeMaterial(c,f||'le
   g.add(openShell(0.165,0.205,P.shoulderY-(P.kneeY-0.02),(P.shoulderY+P.kneeY-0.02)/2,m,0.8));
   g.add(openShell(0.10,0.08,0.10,P.neckY+0.01,m,0.9));
   [-1,1].forEach(function(s){var sl=S(new THREE.Mesh(new THREE.CapsuleGeometry(P.upperArmR+0.025,0.5,6,12),m));sl.position.set(s*(P.shoulderX+0.05),P.shoulderY-0.28,0);sl.rotation.z=s*0.12;g.add(sl);});
-  var belt=S(new THREE.Mesh(new THREE.TorusGeometry(0.17,0.018,8,28),makeMaterial(0x141414,'leather')));belt.rotation.x=Math.PI/2;belt.position.y=P.waistY;g.add(belt);return g;};
+  var belt=S(new THREE.Mesh(new THREE.TorusGeometry(0.17,0.018,8,28),makeMaterial(0x141414,'leather')));belt.rotation.x=Math.PI/2;belt.position.y=P.waistY;g.add(belt);
+  var metal=makeMaterial(0xc9ccd1,'metal');
+  var buckle=S(new THREE.Mesh(new THREE.BoxGeometry(0.05,0.04,0.02),metal));buckle.position.set(0,P.waistY,0.175);g.add(buckle);
+  // double-breasted button rows
+  [-1,1].forEach(function(s){for(var i=0;i<4;i++){var bt=S(new THREE.Mesh(new THREE.SphereGeometry(0.011,10,8),metal));bt.position.set(s*0.06,P.chestY+0.06-i*0.075,0.16);g.add(bt);}});return g;};
 G.pleatedSkirt=function(c,f){var g=group('pleatedSkirt');
   var m=new THREE.MeshStandardMaterial({map:makePlaidTexture(),roughness:0.85,side:DBL});m.flatShading=true;
   // real accordion pleats: take a cone shell and push alternating radial segments in/out
