@@ -129,4 +129,6 @@ export function makeMaterial(color, finish = 'matte') {
 }
 
 export const SKIN = new THREE.MeshStandardMaterial({ color: 0xe8c4a8, roughness: 0.6, metalness: 0.0 });
+SKIN.bumpMap = makeGrain('leather', 10); SKIN.bumpScale = 0.0015; // faint pores
 export const HAIR = new THREE.MeshStandardMaterial({ color: 0x121016, roughness: 0.55, metalness: 0.05 });
+HAIR.bumpMap = makeGrain('metal', 2); HAIR.bumpScale = 0.0025; // directional strand sheen
