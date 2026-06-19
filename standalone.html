@@ -1,1706 +1,487 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Crypt Couture · 3D Goth & Industrial Try-On</title>
-  <link rel="manifest" href="./manifest.webmanifest" />
-  <meta name="theme-color" content="#0b0a10" />
-  <link rel="icon" type="image/svg+xml" href="./icon.svg" />
-  <link rel="apple-touch-icon" href="./icon.svg" />
-  <style>
-:root {
-  --bg: #0b0a10;
-  --panel: #141220;
-  --panel-2: #1c1930;
-  --ink: #ece9f5;
-  --muted: #9c97b8;
-  --accent: #ff2e88;
-  --accent-2: #21d4fd;
-  --line: #2a2740;
-}
-
-* { box-sizing: border-box; }
-html, body { margin: 0; height: 100%; }
-body {
-  background: var(--bg);
-  color: var(--ink);
-  font-family: 'Trebuchet MS', 'Segoe UI', system-ui, sans-serif;
-  overflow: hidden;
-}
-
-#app { display: grid; grid-template-columns: 360px 1fr; height: 100vh; }
-
-#sidebar {
-  background: linear-gradient(180deg, #15121f, #0d0b14);
-  border-right: 1px solid var(--line);
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-
-#sidebar header { padding: 18px 18px 10px; border-bottom: 1px solid var(--line); }
-#sidebar h1 {
-  margin: 0;
-  font-size: 22px;
-  letter-spacing: 1px;
-  background: linear-gradient(90deg, var(--accent), var(--accent-2));
-  -webkit-background-clip: text; background-clip: text; color: transparent;
-}
-.sub { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
-
-#panel { padding: 12px 14px; overflow-y: auto; flex: 1; min-height: 0; }
-#panel::-webkit-scrollbar { width: 9px; }
-#panel::-webkit-scrollbar-thumb { background: #2c2942; border-radius: 6px; }
-
-.presets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
-.preset {
-  flex: 1 1 46%;
-  padding: 8px 6px; font-size: 12px; cursor: pointer;
-  background: var(--panel-2); color: var(--ink);
-  border: 1px solid var(--line); border-radius: 8px;
-  transition: .15s;
-}
-.preset:hover { border-color: var(--accent); color: #fff; }
-
-.actions { display: flex; gap: 6px; margin-bottom: 14px; }
-.action {
-  flex: 1; padding: 8px 4px; font-size: 12px; cursor: pointer;
-  background: #211d36; color: var(--ink);
-  border: 1px solid var(--line); border-radius: 8px;
-}
-.action:hover { border-color: var(--accent-2); }
-
-#panel h3 {
-  margin: 14px 0 8px; font-size: 12px; text-transform: uppercase;
-  letter-spacing: 1.5px; color: var(--muted);
-}
-
-.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-
-.card {
-  position: relative;
-  background: var(--panel); border: 1px solid var(--line);
-  border-radius: 10px; padding: 9px 9px 8px; cursor: pointer;
-  transition: .15s;
-}
-.card:hover { transform: translateY(-2px); border-color: #4a4566; }
-.card.equipped {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent), 0 6px 18px -8px var(--accent);
-  background: #1e1530;
-}
-.card.equipped::after {
-  content: '✓ worn'; position: absolute; top: 7px; right: 8px;
-  font-size: 10px; color: var(--accent); letter-spacing: .5px;
-}
-.card .name { font-size: 13px; font-weight: 600; padding-right: 38px; }
-.card .tag {
-  display: inline-block; margin-top: 3px; font-size: 10px;
-  color: var(--muted); text-transform: uppercase; letter-spacing: 1px;
-}
-
-.swatches { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
-.sw {
-  width: 16px; height: 16px; border-radius: 50%; padding: 0; cursor: pointer;
-  border: 1px solid #00000055; outline: 2px solid transparent; transition: .1s;
-}
-.sw:hover { transform: scale(1.18); }
-.sw.active { outline: 2px solid var(--accent-2); }
-
-#sidebar footer {
-  padding: 10px 16px; border-top: 1px solid var(--line);
-  color: var(--muted); font-size: 11px; line-height: 1.5;
-}
-
-#stage { position: relative; }
-#scene { width: 100%; height: 100%; display: block; }
-
-@media (max-width: 720px) {
-  #app { grid-template-columns: 1fr; grid-template-rows: 45vh 55vh; }
-  #stage { order: -1; }
-}
-
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Crypt Couture · 3D Goth & Industrial Try-On</title>
+<!-- Classic (non-module) Three.js so this single file runs from anywhere,
+     including GitHub's HTML preview and a phone browser.
+     Loaded by the bootstrap at the bottom with multi-CDN fallback. -->
+<style>
+:root{--bg:#0b0a10;--panel:#141220;--panel-2:#1c1930;--ink:#ece9f5;--muted:#9c97b8;--accent:#ff2e88;--accent-2:#21d4fd;--line:#2a2740;}
+*{box-sizing:border-box;}
+html,body{margin:0;height:100%;}
+body{background:var(--bg);color:var(--ink);font-family:'Trebuchet MS','Segoe UI',system-ui,sans-serif;overflow:hidden;-webkit-tap-highlight-color:transparent;}
+#app{display:grid;grid-template-columns:340px 1fr;height:100vh;height:100dvh;}
+#sidebar{background:linear-gradient(180deg,#15121f,#0d0b14);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;}
+#sidebar header{padding:16px 16px 8px;border-bottom:1px solid var(--line);}
+#sidebar h1{margin:0;font-size:21px;letter-spacing:1px;background:linear-gradient(90deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent;}
+.sub{margin:4px 0 0;color:var(--muted);font-size:12px;}
+#panel{padding:12px 14px;overflow-y:auto;flex:1;min-height:0;-webkit-overflow-scrolling:touch;}
+#panel::-webkit-scrollbar{width:9px;}#panel::-webkit-scrollbar-thumb{background:#2c2942;border-radius:6px;}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+.preset{flex:1 1 46%;padding:9px 6px;font-size:12px;cursor:pointer;background:var(--panel-2);color:var(--ink);border:1px solid var(--line);border-radius:8px;}
+.preset:hover{border-color:var(--accent);color:#fff;}
+.actions{display:flex;gap:6px;margin-bottom:14px;}
+.action{flex:1;padding:9px 4px;font-size:12px;cursor:pointer;background:#211d36;color:var(--ink);border:1px solid var(--line);border-radius:8px;}
+.action:hover{border-color:var(--accent-2);}
+#panel h3{margin:14px 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 9px 8px;cursor:pointer;transition:.15s;}
+.card:hover{transform:translateY(-2px);border-color:#4a4566;}
+.card.equipped{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 6px 18px -8px var(--accent);background:#1e1530;}
+.card.equipped::after{content:'✓ worn';position:absolute;top:7px;right:8px;font-size:10px;color:var(--accent);letter-spacing:.5px;}
+.card .name{font-size:13px;font-weight:600;padding-right:38px;}
+.card .tag{display:inline-block;margin-top:3px;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
+.swatches{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
+.sw{width:18px;height:18px;border-radius:50%;padding:0;cursor:pointer;border:1px solid #00000055;outline:2px solid transparent;transition:.1s;}
+.sw:hover{transform:scale(1.18);}
+.sw.active{outline:2px solid var(--accent-2);}
+#sidebar footer{padding:10px 16px;border-top:1px solid var(--line);color:var(--muted);font-size:11px;line-height:1.5;}
+#stage{position:relative;}
+#scene{width:100%;height:100%;display:block;touch-action:none;}
+@media (max-width:760px){#app{grid-template-columns:1fr;grid-template-rows:46vh 54vh;grid-template-rows:46dvh 54dvh;}#stage{order:-1;}}
 </style>
-  <script type="importmap">
-  {
-    "imports": {
-      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-    }
-  }
-  </script>
 </head>
 <body>
-  <div id="app">
-    <aside id="sidebar">
-      <header>
-        <h1>⛧ Crypt Couture</h1>
-        <p class="sub">Goth &amp; Industrial · mix &amp; match in 3D</p>
-        <p class="sub" id="count">loading…</p>
-      </header>
-      <div id="panel"></div>
-      <footer>
-        Drag to rotate · scroll to zoom · click a piece to wear it · click swatches to recolour
-      </footer>
-    </aside>
-    <main id="stage">
-      <canvas id="scene"></canvas>
-    </main>
+<div id="app">
+  <aside id="sidebar">
+    <header>
+      <h1>⛧ Crypt Couture</h1>
+      <p class="sub">Goth &amp; Industrial · mix &amp; match in 3D</p>
+      <p class="sub" id="count">loading…</p>
+    </header>
+    <div id="panel"></div>
+    <footer>Drag to rotate · pinch/scroll to zoom · tap a piece to wear it · tap a swatch to recolour</footer>
+  </aside>
+  <main id="stage"><canvas id="scene"></canvas></main>
+</div>
+
+<div id="boot" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#0b0a10;color:#9c97b8;font-family:'Trebuchet MS',system-ui,sans-serif;text-align:center;padding:24px;z-index:50;">
+  <div>
+    <div style="font-size:26px;background:linear-gradient(90deg,#ff2e88,#21d4fd);-webkit-background-clip:text;background-clip:text;color:transparent;">⛧ Crypt Couture</div>
+    <div id="bootmsg" style="margin-top:12px;font-size:14px;">Loading the 3D engine…</div>
   </div>
-  <script type="module">
-// AUTO-GENERATED by tryon/build-standalone.js — do not edit by hand.
-// Single source of truth lives in tryon/src/*.js.
-import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+</div>
 
-const __cache = {};
-const __defs = {};
-function __require(name){ if(__cache[name]) return __cache[name]; const __exports={}; __cache[name]=__exports; __defs[name](__exports); return __exports; }
-
-__defs['proportions'] = function(__exports){
-// Shared body proportions so the avatar and every garment line up.
-// Units are roughly meters; feet sit on the ground plane at y = 0.
-// A stylized feminine figure, ~1.72 tall.
-
-const P = {
-  groundY: 0,
-
-  // Vertical landmarks (world Y)
-  ankleY: 0.09,
-  kneeY: 0.52,
-  hipY: 0.96,
-  waistY: 1.07,
-  chestY: 1.27,
-  shoulderY: 1.44,
-  neckY: 1.50,
-  chinY: 1.56,
-  headY: 1.64,
-  topY: 1.74,
-
-  // Horizontal placement
-  legX: 0.095, // distance of each leg from the centre line
-  shoulderX: 0.175, // distance of each shoulder from the centre line
-
-  // Radii used to fit clothing snugly over the body
-  hipR: 0.165,
-  waistR: 0.125,
-  chestR: 0.155,
-  thighR: 0.095,
-  calfR: 0.07,
-  upperArmR: 0.05,
-  foreArmR: 0.042,
-  neckR: 0.052,
-  headR: 0.10,
-};
-
-// The hourglass torso silhouette (radius, y) used by a LatheGeometry.
-// Shared so corsets / crop tops can reuse the same curve.
-const TORSO_PROFILE = [
-  [0.150, P.hipY - 0.02],
-  [0.165, P.hipY + 0.02],
-  [0.150, P.hipY + 0.06],
-  [0.125, P.waistY],
-  [0.135, P.waistY + 0.07],
-  [0.155, P.chestY - 0.02],
-  [0.150, P.chestY + 0.04],
-  [0.110, P.shoulderY - 0.04],
-  [0.072, P.neckY - 0.02],
-  [0.058, P.neckY + 0.02],
-];
-
-
-__exports.P = P;
-__exports.TORSO_PROFILE = TORSO_PROFILE;
-};
-
-__defs['materials'] = function(__exports){
-
-// ---- Procedural textures (no external files needed) -------------------------
-
-// A fishnet / mesh pattern drawn to a canvas, tiled. Transparent gaps.
-function makeFishnetTexture(color = '#0a0a0a', scale = 16) {
-  const c = document.createElement('canvas');
-  c.width = c.height = 64;
-  const ctx = c.getContext('2d');
-  ctx.clearRect(0, 0, 64, 64);
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 5;
-  // diagonal lattice
-  for (let i = -64; i < 128; i += 22) {
-    ctx.beginPath();
-    ctx.moveTo(i, 0);
-    ctx.lineTo(i + 64, 64);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(i + 64, 0);
-    ctx.lineTo(i, 64);
-    ctx.stroke();
+<script>
+/* ---- bootstrap: load Three.js + OrbitControls with multi-CDN fallback ---- */
+(function(){
+  var msg=document.getElementById('bootmsg');
+  function loadScript(urls,done){
+    var i=0;
+    (function tryNext(){
+      if(i>=urls.length){done(new Error('all CDNs failed'));return;}
+      var s=document.createElement('script');
+      s.src=urls[i++];
+      s.onload=function(){done(null);};
+      s.onerror=function(){tryNext();};
+      document.head.appendChild(s);
+    })();
   }
-  const tex = new THREE.CanvasTexture(c);
-  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.repeat.set(scale, scale * 1.4);
-  return tex;
-}
+  // WebGL support check
+  try{
+    var t=document.createElement('canvas');
+    if(!(t.getContext('webgl')||t.getContext('experimental-webgl'))) throw 0;
+  }catch(e){ msg.innerHTML='This browser has WebGL disabled.<br>Enable hardware acceleration / try Chrome.'; return; }
 
-// A tartan / plaid pattern for grunge skirts.
-function makePlaidTexture(base = '#6e1023', dark = '#2a0710', line = '#d8c08a') {
-  const c = document.createElement('canvas');
-  c.width = c.height = 64;
-  const ctx = c.getContext('2d');
-  ctx.fillStyle = base;
-  ctx.fillRect(0, 0, 64, 64);
-  ctx.fillStyle = dark;
-  ctx.globalAlpha = 0.55;
-  ctx.fillRect(0, 0, 32, 64);
-  ctx.fillRect(0, 0, 64, 32);
-  ctx.globalAlpha = 1;
-  ctx.strokeStyle = line;
-  ctx.lineWidth = 2;
-  [10, 22, 42, 54].forEach((p) => {
-    ctx.beginPath(); ctx.moveTo(p, 0); ctx.lineTo(p, 64); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(0, p); ctx.lineTo(64, p); ctx.stroke();
+  loadScript([
+    'https://unpkg.com/three@0.147.0/build/three.min.js',
+    'https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/three.js/0.147.0/three.min.js'
+  ], function(err){
+    if(err||!window.THREE){ msg.innerHTML='Couldn\'t load the 3D library.<br>Check your connection and reload.'; return; }
+    loadScript([
+      'https://unpkg.com/three@0.147.0/examples/js/controls/OrbitControls.js',
+      'https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js'
+    ], function(err2){
+      // OrbitControls is optional-ish; start anyway, but it's tiny so should load.
+      var b=document.getElementById('boot'); if(b) b.parentNode.removeChild(b);
+      try{ startApp(); }
+      catch(e3){ document.body.insertAdjacentHTML('beforeend','<div style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#0b0a10;color:#ff6b9d;font-family:system-ui;padding:24px;text-align:center;z-index:60;">Something went wrong starting the studio:<br>'+(e3&&e3.message||e3)+'</div>'); }
+    });
   });
-  const tex = new THREE.CanvasTexture(c);
-  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.repeat.set(4, 4);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  return tex;
-}
+})();
 
-// ---- Procedural micro-surface (bump) maps for real PBR depth ---------------
-// Grayscale height detail consumed as a bumpMap — leather grain, fabric weave,
-// brushed metal. Cached per (kind, repeat) so garments share one texture.
-const _grainCache = {};
-function makeGrain(kind = 'fabric', repeat = 6) {
-  const key = kind + ':' + repeat;
-  if (_grainCache[key]) return _grainCache[key];
-  const S = 128;
-  const c = document.createElement('canvas');
-  c.width = c.height = S;
-  const x = c.getContext('2d');
-  x.fillStyle = '#808080';
-  x.fillRect(0, 0, S, S);
-  const img = x.getImageData(0, 0, S, S);
-  const d = img.data;
-  const put = (i, v) => { v = v < 0 ? 0 : v > 255 ? 255 : v; d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255; };
-  for (let y = 0; y < S; y++) {
-    for (let xx = 0; xx < S; xx++) {
-      const i = (y * S + xx) * 4;
-      let v = 128;
-      if (kind === 'leather') {
-        v = 128 + (Math.random() * 46 - 23) + Math.sin(xx * 0.20) * Math.cos(y * 0.17) * 14;
-      } else if (kind === 'metal') {
-        v = 128 + (Math.random() * 10 - 5) + Math.sin(y * 1.9) * 22; // horizontal brushed streaks
-      } else { // fabric weave
-        const weave = ((xx + y) % 8 < 4 ? 1 : -1) * 16 + Math.sin(xx * 0.8) * 8 + Math.sin(y * 0.8) * 8;
-        v = 128 + weave + (Math.random() * 8 - 4);
-      }
-      put(i, v);
-    }
+function startApp(){
+"use strict";
+if(typeof THREE.OrbitControls!=='function'){ THREE.OrbitControls=function(cam){this.target=new THREE.Vector3();this.update=function(){};this.enableDamping=false;}; }
+var DBL = THREE.DoubleSide, TWO = Math.PI*2;
+
+/* ---------------- proportions ---------------- */
+var P = { groundY:0, ankleY:0.09, kneeY:0.52, hipY:0.96, waistY:1.07, chestY:1.27,
+  shoulderY:1.44, neckY:1.50, chinY:1.56, headY:1.64, topY:1.74,
+  legX:0.095, shoulderX:0.175, hipR:0.165, waistR:0.125, chestR:0.155,
+  thighR:0.095, calfR:0.07, upperArmR:0.05, foreArmR:0.042, neckR:0.052, headR:0.10 };
+
+/* ---------------- materials + textures ---------------- */
+function makeFishnetTexture(color,scale){ color=color||'#0a0a0a'; scale=scale||16;
+  var c=document.createElement('canvas');c.width=c.height=64;var x=c.getContext('2d');
+  x.clearRect(0,0,64,64);x.strokeStyle=color;x.lineWidth=5;
+  for(var i=-64;i<128;i+=22){x.beginPath();x.moveTo(i,0);x.lineTo(i+64,64);x.stroke();x.beginPath();x.moveTo(i+64,0);x.lineTo(i,64);x.stroke();}
+  var t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(scale,scale*1.4);return t;}
+function makePlaidTexture(){var base='#6e1023',dark='#2a0710',line='#d8c08a';
+  var c=document.createElement('canvas');c.width=c.height=64;var x=c.getContext('2d');
+  x.fillStyle=base;x.fillRect(0,0,64,64);x.fillStyle=dark;x.globalAlpha=.55;x.fillRect(0,0,32,64);x.fillRect(0,0,64,32);x.globalAlpha=1;
+  x.strokeStyle=line;x.lineWidth=2;[10,22,42,54].forEach(function(p){x.beginPath();x.moveTo(p,0);x.lineTo(p,64);x.stroke();x.beginPath();x.moveTo(0,p);x.lineTo(64,p);x.stroke();});
+  var t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(4,4);t.encoding=THREE.sRGBEncoding;return t;}
+function makeStripeTexture(){var c=document.createElement('canvas');c.width=16;c.height=32;var x=c.getContext('2d');
+  for(var i=0;i<8;i++){x.fillStyle=i%2?'#1a1a1a':'#dddddd';x.fillRect(0,i*4,16,4);}
+  var t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(1,8);t.encoding=THREE.sRGBEncoding;return t;}
+function makeMaterial(color,finish){ finish=finish||'matte';
+  switch(finish){
+    case 'leather': return new THREE.MeshStandardMaterial({color:color,roughness:0.22,metalness:0.15});
+    case 'latex':   return new THREE.MeshStandardMaterial({color:color,roughness:0.08,metalness:0.2});
+    case 'metal':   return new THREE.MeshStandardMaterial({color:color,roughness:0.3,metalness:1.0});
+    case 'denim':   return new THREE.MeshStandardMaterial({color:color,roughness:0.85,metalness:0.0});
+    case 'velvet':  return new THREE.MeshStandardMaterial({color:color,roughness:0.95,metalness:0.0});
+    case 'mesh':{var m=new THREE.MeshStandardMaterial({color:color,roughness:0.7});m.transparent=true;m.opacity=0.55;m.side=DBL;return m;}
+    default: return new THREE.MeshStandardMaterial({color:color,roughness:0.78,metalness:0.0});
   }
-  x.putImageData(img, 0, 0);
-  const t = new THREE.CanvasTexture(c);
-  t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  t.repeat.set(repeat, repeat);
-  t.colorSpace = THREE.NoColorSpace;
-  _grainCache[key] = t;
-  return t;
 }
+var SKIN=new THREE.MeshStandardMaterial({color:0xe8c4a8,roughness:0.6});
+var HAIR=new THREE.MeshStandardMaterial({color:0x121016,roughness:0.55,metalness:0.05});
+function S(m){m.castShadow=true;m.receiveShadow=true;return m;}
+function lathe(pts,m,seg){return S(new THREE.Mesh(new THREE.LatheGeometry(pts.map(function(p){return new THREE.Vector2(p[0],p[1]);}),seg||28),m));}
+function group(n){var g=new THREE.Group();g.name=n;return g;}
 
-// ---- Material factory -------------------------------------------------------
-
-// Named finishes used across the catalog so colour swaps stay consistent.
-function makeMaterial(color, finish = 'matte') {
-  let m;
-  switch (finish) {
-    case 'leather': // glossy PU / patent leather
-      m = new THREE.MeshStandardMaterial({ color, roughness: 0.22, metalness: 0.15 });
-      m.bumpMap = makeGrain('leather', 5); m.bumpScale = 0.004; break;
-    case 'latex':
-      m = new THREE.MeshStandardMaterial({ color, roughness: 0.08, metalness: 0.2 });
-      m.bumpMap = makeGrain('leather', 6); m.bumpScale = 0.0015; break;
-    case 'metal': // studs, chains, buckles
-      m = new THREE.MeshStandardMaterial({ color, roughness: 0.3, metalness: 1.0 });
-      m.bumpMap = makeGrain('metal', 3); m.bumpScale = 0.003; break;
-    case 'denim':
-      m = new THREE.MeshStandardMaterial({ color, roughness: 0.85, metalness: 0.0 });
-      m.bumpMap = makeGrain('fabric', 8); m.bumpScale = 0.006; break;
-    case 'velvet':
-      m = new THREE.MeshStandardMaterial({ color, roughness: 0.95, metalness: 0.0 });
-      m.bumpMap = makeGrain('fabric', 6); m.bumpScale = 0.003; break;
-    case 'mesh': {
-      m = new THREE.MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.0 });
-      m.transparent = true;
-      m.opacity = 0.55;
-      m.side = THREE.DoubleSide;
-      break;
-    }
-    case 'matte':
-    default:
-      m = new THREE.MeshStandardMaterial({ color, roughness: 0.78, metalness: 0.0 });
-      m.bumpMap = makeGrain('fabric', 7); m.bumpScale = 0.004; break;
-  }
-  return m;
-}
-
-const SKIN = new THREE.MeshStandardMaterial({ color: 0xe8c4a8, roughness: 0.6, metalness: 0.0 });
-SKIN.bumpMap = makeGrain('leather', 10); SKIN.bumpScale = 0.0015; // faint pores
-const HAIR = new THREE.MeshStandardMaterial({ color: 0x121016, roughness: 0.55, metalness: 0.05 });
-HAIR.bumpMap = makeGrain('metal', 2); HAIR.bumpScale = 0.0025; // directional strand sheen
-
-
-__exports.makeFishnetTexture = makeFishnetTexture;
-__exports.makePlaidTexture = makePlaidTexture;
-__exports.makeGrain = makeGrain;
-__exports.makeMaterial = makeMaterial;
-__exports.SKIN = SKIN;
-__exports.HAIR = HAIR;
-};
-
-__defs['garments'] = function(__exports){
-const { P } = __require('proportions');
-const { makeMaterial, makeFishnetTexture, makePlaidTexture } = __require('materials');
-
-// Every builder returns a THREE.Group positioned in the avatar's local space.
-// Signature: build(color:number, finish:string) => THREE.Group
-// `color` is a hex int chosen by the user; `finish` selects the material look.
-
-const DBL = THREE.DoubleSide;
-const TWO_PI = Math.PI * 2;
-
-function group(name) { const g = new THREE.Group(); g.name = name; return g; }
-function shadow(m) { m.castShadow = true; m.receiveShadow = true; return m; }
-
-// shell with an opening at the front (+Z), used for jackets / coats / corsets
-function openShell(rTop, rBot, h, yCenter, mat, gap = 0) {
-  const theta0 = Math.PI / 2 + gap / 2;
-  const thetaLen = TWO_PI - gap;
-  const geo = new THREE.CylinderGeometry(rTop, rBot, h, 28, 1, true, theta0, thetaLen);
-  const m = shadow(new THREE.Mesh(geo, mat));
-  m.position.y = yCenter;
-  return m;
-}
-
-// a tube that follows one leg (thigh + calf), slightly larger than the skin
-function legTube(side, mat, opts = {}) {
-  const g = group('legtube');
-  const rT = (opts.thigh ?? P.thighR) + (opts.pad ?? 0.012);
-  const rC = (opts.calf ?? P.calfR) + (opts.pad ?? 0.012);
-  const topY = opts.topY ?? P.hipY - 0.02;
-  const botY = opts.botY ?? P.ankleY + 0.02;
-  const kneeY = P.kneeY;
-  const thigh = shadow(new THREE.Mesh(new THREE.CylinderGeometry(rC + 0.01, rT, topY - kneeY, 16, 1, true), mat));
-  thigh.position.set(side * P.legX, (topY + kneeY) / 2, 0);
-  const calf = shadow(new THREE.Mesh(new THREE.CylinderGeometry(rC - 0.005, rC + 0.01, kneeY - botY, 16, 1, true), mat));
-  calf.position.set(side * P.legX, (kneeY + botY) / 2, 0);
-  g.add(thigh, calf);
-  return g;
-}
-
-// ---------------------------------------------------------------------------
-// TOPS
-// ---------------------------------------------------------------------------
-
-function cropTop(color, finish = 'matte') {
-  const g = group('cropTop');
-  const mat = makeMaterial(color, finish); mat.side = DBL;
-  const pts = [
-    new THREE.Vector2(0.140, P.chestY - 0.10),
-    new THREE.Vector2(0.165, P.chestY - 0.02),
-    new THREE.Vector2(0.162, P.chestY + 0.04),
-    new THREE.Vector2(0.120, P.shoulderY - 0.06),
-    new THREE.Vector2(0.090, P.shoulderY - 0.02),
-  ];
-  g.add(shadow(new THREE.Mesh(new THREE.LatheGeometry(pts, 28), mat)));
-  // straps
-  [-1, 1].forEach((s) => {
-    const strap = shadow(new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.16, 0.02), mat));
-    strap.position.set(s * 0.07, P.shoulderY - 0.02, 0.02);
-    g.add(strap);
+/* ---------------- avatar ---------------- */
+function buildAvatar(){
+  var g=group('avatar');
+  function add(m){S(m);g.add(m);return m;}
+  add(lathe([[0.155,P.hipY-0.04],[0.168,P.hipY+0.02],[0.150,P.hipY+0.07],[0.122,P.waistY],[0.135,P.waistY+0.08],[0.156,P.chestY-0.02],[0.150,P.chestY+0.05],[0.105,P.shoulderY-0.03],[0.070,P.neckY-0.02],[0.056,P.neckY+0.02]],SKIN,32));
+  [-1,1].forEach(function(s){var b=add(new THREE.Mesh(new THREE.SphereGeometry(0.072,20,16),SKIN));b.position.set(s*0.062,P.chestY+0.01,0.105);b.scale.set(1,0.9,0.8);});
+  var pel=add(new THREE.Mesh(new THREE.SphereGeometry(0.155,24,16),SKIN));pel.position.set(0,P.hipY-0.05,0);pel.scale.set(1,0.7,0.85);
+  // subtle navel + collarbones
+  var deep=new THREE.MeshStandardMaterial({color:0xb98a7a,roughness:0.7});
+  var navel=add(new THREE.Mesh(new THREE.SphereGeometry(0.012,10,8),deep));navel.position.set(0,P.waistY-0.05,0.118);navel.scale.set(1,1.3,0.5);
+  [-1,1].forEach(function(s){var cb=add(new THREE.Mesh(new THREE.CapsuleGeometry(0.007,0.07,4,8),SKIN));cb.position.set(s*0.05,P.shoulderY-0.02,0.092);cb.rotation.set(0,0,s*0.55);});
+  var neck=add(new THREE.Mesh(new THREE.CylinderGeometry(P.neckR,P.neckR+0.01,0.09,16),SKIN));neck.position.set(0,P.neckY+0.05,0);
+  var head=add(new THREE.Mesh(new THREE.SphereGeometry(P.headR,28,24),SKIN));head.position.set(0,P.headY,0);head.scale.set(0.92,1.08,0.95);
+  var hb=add(new THREE.Mesh(new THREE.SphereGeometry(P.headR+0.02,24,20),HAIR));hb.position.set(0,P.headY+0.01,-0.015);hb.scale.set(1.05,1.18,1.05);
+  // hair: crown volume + parted bangs + long back + side strands framing the face
+  var cap=add(new THREE.Mesh(new THREE.SphereGeometry(P.headR+0.018,24,20),HAIR));cap.position.set(0,P.headY+0.012,-0.02);cap.scale.set(1.06,1.15,1.04);
+  [-1,1].forEach(function(s){var bang=add(new THREE.Mesh(new THREE.BoxGeometry(0.105,0.082,0.10),HAIR));bang.position.set(s*0.052,P.headY+0.056,0.044);bang.rotation.set(-0.14,0,s*0.10);});
+  var bk=add(new THREE.Mesh(new THREE.BoxGeometry(0.215,0.42,0.13),HAIR));bk.position.set(0,P.headY-0.19,-0.05);
+  [-1,1].forEach(function(s){var st=add(new THREE.Mesh(new THREE.CapsuleGeometry(0.046,0.34,8,12),HAIR));st.position.set(s*0.108,P.headY-0.19,0.015);
+    var fs=add(new THREE.Mesh(new THREE.CapsuleGeometry(0.022,0.26,6,10),HAIR));fs.position.set(s*0.098,P.headY-0.12,0.055);});
+  // face: eyes with iris, winged eyeliner, brows, nose, lips
+  var eyeW=new THREE.MeshStandardMaterial({color:0xf2eef5,roughness:0.3});
+  var iris=new THREE.MeshStandardMaterial({color:0x4b2e6b,roughness:0.25});
+  var liner=new THREE.MeshStandardMaterial({color:0x0a0a0a,roughness:0.4});
+  var lipM=new THREE.MeshStandardMaterial({color:0x8a1f3a,roughness:0.38});
+  [-1,1].forEach(function(s){
+    var w=add(new THREE.Mesh(new THREE.SphereGeometry(0.017,14,12),eyeW));w.position.set(s*0.040,P.headY+0.012,P.headR*0.90);w.scale.set(1.2,0.82,0.6);
+    var ir=add(new THREE.Mesh(new THREE.SphereGeometry(0.0085,12,12),iris));ir.position.set(s*0.044,P.headY+0.012,P.headR*0.965);
+    var ln=add(new THREE.Mesh(new THREE.BoxGeometry(0.05,0.006,0.01),liner));ln.position.set(s*0.040,P.headY+0.03,P.headR*0.92);ln.rotation.z=-s*0.18;
+    var br=add(new THREE.Mesh(new THREE.BoxGeometry(0.042,0.008,0.012),HAIR));br.position.set(s*0.043,P.headY+0.052,P.headR*0.89);br.rotation.z=-s*0.12;
+  });
+  var nose=add(new THREE.Mesh(new THREE.SphereGeometry(0.016,12,10),SKIN));nose.position.set(0,P.headY-0.018,P.headR*0.95);nose.scale.set(0.7,1.2,1.3);
+  var lip=add(new THREE.Mesh(new THREE.SphereGeometry(0.024,16,10),lipM));lip.position.set(0,P.headY-0.055,P.headR*0.90);lip.scale.set(1.45,0.62,0.6);
+  [-1,1].forEach(function(s){
+    var sh=add(new THREE.Mesh(new THREE.SphereGeometry(0.058,16,14),SKIN));sh.position.set(s*P.shoulderX,P.shoulderY,0);
+    var up=add(new THREE.Mesh(new THREE.CapsuleGeometry((P.upperArmR+P.foreArmR)/2,0.26,8,14),SKIN));up.position.set(s*(P.shoulderX+0.03),P.shoulderY-0.16,0);up.rotation.z=s*0.14;
+    var el=add(new THREE.Mesh(new THREE.SphereGeometry(0.045,14,12),SKIN));el.position.set(s*(P.shoulderX+0.07),P.shoulderY-0.30,0);
+    var fo=add(new THREE.Mesh(new THREE.CapsuleGeometry((P.foreArmR+0.034)/2,0.24,8,14),SKIN));fo.position.set(s*(P.shoulderX+0.085),P.shoulderY-0.44,0);fo.rotation.z=s*0.10;
+    var palm=add(new THREE.Mesh(new THREE.BoxGeometry(0.05,0.075,0.026),SKIN));palm.position.set(s*(P.shoulderX+0.10),P.shoulderY-0.555,0);palm.rotation.z=s*0.10;
+    var fing=add(new THREE.Mesh(new THREE.BoxGeometry(0.046,0.05,0.022),SKIN));fing.position.set(s*(P.shoulderX+0.105),P.shoulderY-0.605,0);fing.rotation.z=s*0.10;
+    var thumb=add(new THREE.Mesh(new THREE.CapsuleGeometry(0.012,0.03,4,8),SKIN));thumb.position.set(s*(P.shoulderX+0.075),P.shoulderY-0.55,0.012);thumb.rotation.z=s*0.6;
+  });
+  [-1,1].forEach(function(s){
+    var th=add(new THREE.Mesh(new THREE.CapsuleGeometry(P.thighR,0.34,8,14),SKIN));th.position.set(s*P.legX,(P.hipY+P.kneeY)/2+0.02,0);th.scale.set(1,1,0.95);
+    var kn=add(new THREE.Mesh(new THREE.SphereGeometry(0.06,14,12),SKIN));kn.position.set(s*P.legX,P.kneeY,0);
+    var ca=add(new THREE.Mesh(new THREE.CapsuleGeometry(P.calfR,0.32,8,14),SKIN));ca.position.set(s*P.legX,(P.kneeY+P.ankleY)/2+0.02,0);
+    var ft=add(new THREE.Mesh(new THREE.BoxGeometry(0.068,0.045,0.14),SKIN));ft.position.set(s*P.legX,P.ankleY-0.045,0.03);
+    var toe=add(new THREE.Mesh(new THREE.BoxGeometry(0.066,0.032,0.05),SKIN));toe.position.set(s*P.legX,P.ankleY-0.052,0.105);toe.rotation.x=0.18;
+    var heel=add(new THREE.Mesh(new THREE.SphereGeometry(0.035,12,10),SKIN));heel.position.set(s*P.legX,P.ankleY-0.03,-0.035);heel.scale.set(0.95,0.85,1);
   });
   return g;
 }
 
-function corset(color, finish = 'leather') {
-  const g = group('corset');
-  const mat = makeMaterial(color, finish); mat.side = DBL;
-  const pts = [
-    new THREE.Vector2(0.170, P.hipY + 0.00),
-    new THREE.Vector2(0.150, P.hipY + 0.06),
-    new THREE.Vector2(0.130, P.waistY),
-    new THREE.Vector2(0.142, P.waistY + 0.08),
-    new THREE.Vector2(0.162, P.chestY - 0.02),
-    new THREE.Vector2(0.150, P.chestY + 0.05),
-  ];
-  g.add(shadow(new THREE.Mesh(new THREE.LatheGeometry(pts, 28), mat)));
-  // lacing across the front
-  const lace = makeMaterial(0xdddddd, 'matte');
-  for (let i = 0; i < 7; i++) {
-    const y = P.waistY - 0.04 + i * 0.045;
-    const x = i % 2 ? 0.02 : -0.02;
-    const l = shadow(new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.004, 0.06, 6), lace));
-    l.rotation.z = Math.PI / 2 + (i % 2 ? 0.5 : -0.5);
-    l.position.set(x, y, 0.16);
-    g.add(l);
-  }
+/* ---------------- garments ---------------- */
+function openShell(rTop,rBot,h,yC,mat,gap){gap=gap||0;
+  var t0=Math.PI/2+gap/2,tl=TWO-gap;
+  var m=S(new THREE.Mesh(new THREE.CylinderGeometry(rTop,rBot,h,28,1,true,t0,tl),mat));m.position.y=yC;return m;}
+function legTube(side,mat,o){o=o||{};
+  var g=group('legtube');var pad=(o.pad!=null?o.pad:0.012);
+  var rT=(o.thigh!=null?o.thigh:P.thighR)+pad, rC=(o.calf!=null?o.calf:P.calfR)+pad;
+  var topY=(o.topY!=null?o.topY:P.hipY-0.02), botY=(o.botY!=null?o.botY:P.ankleY+0.02), kneeY=P.kneeY;
+  var th=S(new THREE.Mesh(new THREE.CylinderGeometry(rC+0.01,rT,topY-kneeY,16,1,true),mat));th.position.set(side*P.legX,(topY+kneeY)/2,0);
+  var ca=S(new THREE.Mesh(new THREE.CylinderGeometry(rC-0.005,rC+0.01,kneeY-botY,16,1,true),mat));ca.position.set(side*P.legX,(kneeY+botY)/2,0);
+  g.add(th,ca);return g;}
+
+var G={};
+G.cropTop=function(c,f){var g=group('cropTop');var m=makeMaterial(c,f||'matte');m.side=DBL;
+  g.add(lathe([[0.140,P.chestY-0.10],[0.165,P.chestY-0.02],[0.162,P.chestY+0.04],[0.120,P.shoulderY-0.06],[0.090,P.shoulderY-0.02]],m));
+  [-1,1].forEach(function(s){var st=S(new THREE.Mesh(new THREE.BoxGeometry(0.03,0.16,0.02),m));st.position.set(s*0.07,P.shoulderY-0.02,0.02);g.add(st);});return g;};
+G.corset=function(c,f){var g=group('corset');var m=makeMaterial(c,f||'leather');m.side=DBL;
+  g.add(lathe([[0.170,P.hipY],[0.150,P.hipY+0.06],[0.130,P.waistY],[0.142,P.waistY+0.08],[0.162,P.chestY-0.02],[0.150,P.chestY+0.05]],m));
+  var lace=makeMaterial(0xdddddd,'matte');
+  for(var i=0;i<7;i++){var l=S(new THREE.Mesh(new THREE.CylinderGeometry(0.004,0.004,0.06,6),lace));l.rotation.z=Math.PI/2+(i%2?0.5:-0.5);l.position.set(i%2?0.02:-0.02,P.waistY-0.04+i*0.045,0.16);g.add(l);}
   // vertical boning seams
-  const bone = new THREE.MeshStandardMaterial({ color: new THREE.Color(color).multiplyScalar(0.45), roughness: 0.3, metalness: 0.1 });
-  for (let k = -2; k <= 2; k++) {
-    if (k === 0) continue;
-    const ang = k * 0.34, r = 0.150;
-    const bn = shadow(new THREE.Mesh(new THREE.BoxGeometry(0.011, 0.27, 0.015), bone));
-    bn.position.set(Math.sin(ang) * r, P.waistY + 0.045, Math.cos(ang) * r);
-    bn.rotation.y = ang;
-    g.add(bn);
-  }
-  return g;
-}
-
-function meshTop(color, finish = 'mesh') {
-  const g = group('meshTop');
-  const mat = makeMaterial(color, 'mesh');
-  const pts = [
-    new THREE.Vector2(0.158, P.waistY - 0.02),
-    new THREE.Vector2(0.135, P.waistY + 0.04),
-    new THREE.Vector2(0.160, P.chestY),
-    new THREE.Vector2(0.118, P.shoulderY - 0.03),
-    new THREE.Vector2(0.072, P.neckY),
-  ];
-  g.add(shadow(new THREE.Mesh(new THREE.LatheGeometry(pts, 28), mat)));
-  // long sleeves over arms
-  [-1, 1].forEach((s) => {
-    const sl = shadow(new THREE.Mesh(new THREE.CapsuleGeometry(P.upperArmR + 0.015, 0.5, 6, 12), mat));
-    sl.position.set(s * (P.shoulderX + 0.06), P.shoulderY - 0.30, 0);
-    sl.rotation.z = s * 0.12;
-    g.add(sl);
-  });
-  return g;
-}
-
-function bandTee(color, finish = 'matte') {
-  const g = group('bandTee');
-  const mat = makeMaterial(color, finish); mat.side = DBL;
-  const pts = [
-    new THREE.Vector2(0.150, P.hipY + 0.04),
-    new THREE.Vector2(0.140, P.waistY),
-    new THREE.Vector2(0.160, P.chestY),
-    new THREE.Vector2(0.115, P.shoulderY - 0.03),
-    new THREE.Vector2(0.085, P.shoulderY + 0.01),
-  ];
-  g.add(shadow(new THREE.Mesh(new THREE.LatheGeometry(pts, 28), mat)));
-  // short sleeves
-  [-1, 1].forEach((s) => {
-    const sl = shadow(new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.058, 0.12, 12, 1, true), mat));
-    sl.position.set(s * (P.shoulderX + 0.02), P.shoulderY - 0.10, 0);
-    sl.rotation.z = s * 0.5;
-    g.add(sl);
-  });
-  // a little band-logo plate on the chest
-  const logo = shadow(new THREE.Mesh(new THREE.PlaneGeometry(0.12, 0.12), makeMaterial(0xf2f2f2, 'matte')));
-  logo.position.set(0, P.chestY, 0.158);
-  g.add(logo);
-  return g;
-}
-
-// ---------------------------------------------------------------------------
-// OUTERWEAR
-// ---------------------------------------------------------------------------
-
-function leatherJacket(color, finish = 'leather') {
-  const g = group('leatherJacket');
-  const mat = makeMaterial(color, finish); mat.side = DBL;
-  // open body shell, cropped at the waist
-  g.add(openShell(0.165, 0.175, P.shoulderY - P.waistY + 0.05, (P.shoulderY + P.waistY) / 2, mat, 1.0));
-  // popped collar (open at front)
-  const collar = openShell(0.105, 0.085, 0.09, P.neckY + 0.0, mat, 1.0);
-  collar.scale.set(1.05, 1, 1.05);
-  g.add(collar);
-  // sleeves
-  [-1, 1].forEach((s) => {
-    const up = shadow(new THREE.Mesh(new THREE.CapsuleGeometry(P.upperArmR + 0.02, 0.26, 6, 12), mat));
-    up.position.set(s * (P.shoulderX + 0.03), P.shoulderY - 0.16, 0);
-    up.rotation.z = s * 0.14;
-    const lo = shadow(new THREE.Mesh(new THREE.CapsuleGeometry(P.foreArmR + 0.018, 0.24, 6, 12), mat));
-    lo.position.set(s * (P.shoulderX + 0.085), P.shoulderY - 0.44, 0);
-    lo.rotation.z = s * 0.10;
-    g.add(up, lo);
-  });
-  // zipper + studs accents
-  const metal = makeMaterial(0xc9ccd1, 'metal');
-  for (let i = 0; i < 5; i++) {
-    const stud = shadow(new THREE.Mesh(new THREE.SphereGeometry(0.012, 8, 8), metal));
-    stud.position.set(-0.10, P.shoulderY - 0.10 - i * 0.02, 0.16);
-    g.add(stud);
-  }
+  var bone=new THREE.MeshStandardMaterial({color:new THREE.Color(c).multiplyScalar(0.45),roughness:0.3,metalness:0.1});
+  for(var k=-2;k<=2;k++){if(k===0)continue;var ang=k*0.34,r=0.150;var bn=S(new THREE.Mesh(new THREE.BoxGeometry(0.011,0.27,0.015),bone));bn.position.set(Math.sin(ang)*r,P.waistY+0.045,Math.cos(ang)*r);bn.rotation.y=ang;g.add(bn);}return g;};
+G.meshTop=function(c){var g=group('meshTop');var m=makeMaterial(c,'mesh');
+  g.add(lathe([[0.158,P.waistY-0.02],[0.135,P.waistY+0.04],[0.160,P.chestY],[0.118,P.shoulderY-0.03],[0.072,P.neckY]],m));
+  [-1,1].forEach(function(s){var sl=S(new THREE.Mesh(new THREE.CapsuleGeometry(P.upperArmR+0.015,0.5,6,12),m));sl.position.set(s*(P.shoulderX+0.06),P.shoulderY-0.30,0);sl.rotation.z=s*0.12;g.add(sl);});return g;};
+G.bandTee=function(c,f){var g=group('bandTee');var m=makeMaterial(c,f||'matte');m.side=DBL;
+  g.add(lathe([[0.150,P.hipY+0.04],[0.140,P.waistY],[0.160,P.chestY],[0.115,P.shoulderY-0.03],[0.085,P.shoulderY+0.01]],m));
+  [-1,1].forEach(function(s){var sl=S(new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.058,0.12,12,1,true),m));sl.position.set(s*(P.shoulderX+0.02),P.shoulderY-0.10,0);sl.rotation.z=s*0.5;g.add(sl);});
+  var logo=S(new THREE.Mesh(new THREE.PlaneGeometry(0.12,0.12),makeMaterial(0xf2f2f2,'matte')));logo.position.set(0,P.chestY,0.158);g.add(logo);return g;};
+G.leatherJacket=function(c,f){var g=group('leatherJacket');var m=makeMaterial(c,f||'leather');m.side=DBL;
+  g.add(openShell(0.165,0.175,P.shoulderY-P.waistY+0.05,(P.shoulderY+P.waistY)/2,m,1.0));
+  var collar=openShell(0.105,0.085,0.09,P.neckY,m,1.0);collar.scale.set(1.05,1,1.05);g.add(collar);
+  [-1,1].forEach(function(s){
+    var up=S(new THREE.Mesh(new THREE.CapsuleGeometry(P.upperArmR+0.02,0.26,6,12),m));up.position.set(s*(P.shoulderX+0.03),P.shoulderY-0.16,0);up.rotation.z=s*0.14;
+    var lo=S(new THREE.Mesh(new THREE.CapsuleGeometry(P.foreArmR+0.018,0.24,6,12),m));lo.position.set(s*(P.shoulderX+0.085),P.shoulderY-0.44,0);lo.rotation.z=s*0.10;g.add(up,lo);});
+  var metal=makeMaterial(0xc9ccd1,'metal');
+  for(var i=0;i<5;i++){var stud=S(new THREE.Mesh(new THREE.SphereGeometry(0.012,8,8),metal));stud.position.set(-0.10,P.shoulderY-0.10-i*0.02,0.16);g.add(stud);}
   // peaked lapels + cuffs
-  [-1, 1].forEach((s) => {
-    const lap = shadow(new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.24, 0.02), mat));
-    lap.position.set(s * 0.075, P.chestY + 0.03, 0.135);
-    lap.rotation.z = s * 0.32; lap.rotation.y = -s * 0.30;
-    const cf = shadow(new THREE.Mesh(new THREE.TorusGeometry(P.foreArmR + 0.022, 0.013, 8, 18), mat));
-    cf.position.set(s * (P.shoulderX + 0.095), P.shoulderY - 0.555, 0);
-    cf.rotation.y = Math.PI / 2;
-    g.add(lap, cf);
+  [-1,1].forEach(function(s){
+    var lap=S(new THREE.Mesh(new THREE.BoxGeometry(0.06,0.24,0.02),m));lap.position.set(s*0.075,P.chestY+0.03,0.135);lap.rotation.z=s*0.32;lap.rotation.y=-s*0.30;g.add(lap);
+    var cf=S(new THREE.Mesh(new THREE.TorusGeometry(P.foreArmR+0.022,0.013,8,18),m));cf.position.set(s*(P.shoulderX+0.095),P.shoulderY-0.555,0);cf.rotation.y=Math.PI/2;g.add(cf);
   });
   // asymmetric moto zipper: offset flap edge + metal zip line + pull tab
-  const midY = (P.shoulderY + P.waistY) / 2;
-  const zlen = P.shoulderY - P.waistY + 0.02;
-  const flap = shadow(new THREE.Mesh(new THREE.BoxGeometry(0.05, zlen, 0.014), mat));
-  flap.position.set(0.035, midY, 0.152); flap.rotation.z = 0.06;
-  const zip = shadow(new THREE.Mesh(new THREE.BoxGeometry(0.012, zlen, 0.012), metal));
-  zip.position.set(-0.005, midY, 0.158); zip.rotation.z = 0.06;
-  const pull = shadow(new THREE.Mesh(new THREE.BoxGeometry(0.013, 0.03, 0.01), metal));
-  pull.position.set(-0.01, P.waistY + 0.10, 0.163);
-  g.add(flap, zip, pull);
-  return g;
-}
-
-function harness(color, finish = 'leather') {
-  const g = group('harness');
-  const mat = makeMaterial(color, finish);
-  const metal = makeMaterial(0xc9ccd1, 'metal');
-  const strap = (w, h, d) => shadow(new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat));
-  // under-bust band
-  const band = shadow(new THREE.Mesh(new THREE.TorusGeometry(0.155, 0.012, 8, 28), mat));
-  band.rotation.x = Math.PI / 2;
-  band.position.y = P.chestY - 0.06;
-  band.scale.set(1, 0.85, 1);
-  g.add(band);
-  // O-ring at sternum
-  const ring = shadow(new THREE.Mesh(new THREE.TorusGeometry(0.03, 0.008, 8, 18), metal));
-  ring.position.set(0, P.chestY, 0.15);
-  g.add(ring);
-  // vertical + diagonal straps
-  [-1, 1].forEach((s) => {
-    const v = strap(0.022, 0.18, 0.02);
-    v.position.set(s * 0.05, P.chestY + 0.06, 0.14);
-    g.add(v);
-    const d = strap(0.022, 0.20, 0.02);
-    d.position.set(s * 0.10, P.chestY - 0.02, 0.12);
-    d.rotation.z = s * 0.5;
-    g.add(d);
-  });
-  // neck loop
-  const loop = shadow(new THREE.Mesh(new THREE.TorusGeometry(0.06, 0.011, 8, 24), mat));
-  loop.rotation.x = Math.PI / 2;
-  loop.position.set(0, P.neckY + 0.02, 0.0);
-  loop.scale.set(1, 1, 0.7);
-  g.add(loop);
+  var midY=(P.shoulderY+P.waistY)/2,zlen=P.shoulderY-P.waistY+0.02;
+  var flap=S(new THREE.Mesh(new THREE.BoxGeometry(0.05,zlen,0.014),m));flap.position.set(0.035,midY,0.152);flap.rotation.z=0.06;g.add(flap);
+  var zip=S(new THREE.Mesh(new THREE.BoxGeometry(0.012,zlen,0.012),metal));zip.position.set(-0.005,midY,0.158);zip.rotation.z=0.06;g.add(zip);
+  var pull=S(new THREE.Mesh(new THREE.BoxGeometry(0.013,0.03,0.01),metal));pull.position.set(-0.01,P.waistY+0.10,0.163);g.add(pull);
+  return g;};
+G.harness=function(c,f){var g=group('harness');var m=makeMaterial(c,f||'leather');var metal=makeMaterial(0xc9ccd1,'metal');
+  function strap(w,h,d){return S(new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m));}
+  var band=S(new THREE.Mesh(new THREE.TorusGeometry(0.155,0.012,8,28),m));band.rotation.x=Math.PI/2;band.position.y=P.chestY-0.06;band.scale.set(1,0.85,1);g.add(band);
+  var ring=S(new THREE.Mesh(new THREE.TorusGeometry(0.03,0.008,8,18),metal));ring.position.set(0,P.chestY,0.15);g.add(ring);
+  [-1,1].forEach(function(s){var v=strap(0.022,0.18,0.02);v.position.set(s*0.05,P.chestY+0.06,0.14);g.add(v);
+    var d=strap(0.022,0.20,0.02);d.position.set(s*0.10,P.chestY-0.02,0.12);d.rotation.z=s*0.5;g.add(d);});
+  var loop=S(new THREE.Mesh(new THREE.TorusGeometry(0.06,0.011,8,24),m));loop.rotation.x=Math.PI/2;loop.position.set(0,P.neckY+0.02,0);loop.scale.set(1,1,0.7);g.add(loop);
   // waist O-ring band + connector rings at strap junctions
-  const wband = shadow(new THREE.Mesh(new THREE.TorusGeometry(0.150, 0.011, 8, 28), mat));
-  wband.rotation.x = Math.PI / 2; wband.position.y = P.waistY + 0.02; wband.scale.set(1, 0.88, 1);
-  g.add(wband);
-  [[0, P.chestY + 0.06], [0, P.chestY - 0.10]].forEach(([px, py]) => {
-    const or = shadow(new THREE.Mesh(new THREE.TorusGeometry(0.018, 0.006, 8, 16), metal));
-    or.position.set(px, py, 0.145);
-    g.add(or);
-  });
-  [-1, 1].forEach((s) => {
-    const sr = shadow(new THREE.Mesh(new THREE.TorusGeometry(0.013, 0.005, 8, 14), metal));
-    sr.position.set(s * 0.10, P.waistY + 0.02, 0.135); sr.rotation.y = Math.PI / 2;
-    const connect = shadow(new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.13, 0.018), mat));
-    connect.position.set(s * 0.085, P.chestY - 0.10, 0.135);
-    g.add(sr, connect);
-  });
-  return g;
-}
-
-function trenchCoat(color, finish = 'leather') {
-  const g = group('trenchCoat');
-  const mat = makeMaterial(color, finish); mat.side = DBL;
-  // long open body from shoulders to knees, flaring out
-  const pts = [
-    new THREE.Vector2(0.20, P.kneeY - 0.02),
-    new THREE.Vector2(0.185, P.hipY),
-    new THREE.Vector2(0.165, P.waistY + 0.02),
-    new THREE.Vector2(0.180, P.chestY),
-    new THREE.Vector2(0.150, P.shoulderY),
-  ];
-  // build as half-open: lathe then cut front by using a shell instead
-  const shell = openShell(0.165, 0.205, P.shoulderY - (P.kneeY - 0.02), (P.shoulderY + P.kneeY - 0.02) / 2, mat, 0.8);
-  g.add(shell);
-  // collar
-  const collar = openShell(0.10, 0.08, 0.10, P.neckY + 0.01, mat, 0.9);
-  g.add(collar);
-  // sleeves full length
-  [-1, 1].forEach((s) => {
-    const sl = shadow(new THREE.Mesh(new THREE.CapsuleGeometry(P.upperArmR + 0.025, 0.5, 6, 12), mat));
-    sl.position.set(s * (P.shoulderX + 0.05), P.shoulderY - 0.28, 0);
-    sl.rotation.z = s * 0.12;
-    g.add(sl);
-  });
-  // belt
-  const belt = shadow(new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.018, 8, 28), makeMaterial(0x141414, 'leather')));
-  belt.rotation.x = Math.PI / 2;
-  belt.position.y = P.waistY;
-  g.add(belt);
-  const metal = makeMaterial(0xc9ccd1, 'metal');
-  const buckle = shadow(new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.04, 0.02), metal));
-  buckle.position.set(0, P.waistY, 0.175);
-  g.add(buckle);
+  var wband=S(new THREE.Mesh(new THREE.TorusGeometry(0.150,0.011,8,28),m));wband.rotation.x=Math.PI/2;wband.position.y=P.waistY+0.02;wband.scale.set(1,0.88,1);g.add(wband);
+  [[0,P.chestY+0.06],[0,P.chestY-0.10]].forEach(function(p){var or=S(new THREE.Mesh(new THREE.TorusGeometry(0.018,0.006,8,16),metal));or.position.set(p[0],p[1],0.145);g.add(or);});
+  [-1,1].forEach(function(s){var sr=S(new THREE.Mesh(new THREE.TorusGeometry(0.013,0.005,8,14),metal));sr.position.set(s*0.10,P.waistY+0.02,0.135);sr.rotation.y=Math.PI/2;g.add(sr);
+    var connect=S(new THREE.Mesh(new THREE.BoxGeometry(0.02,0.13,0.018),m));connect.position.set(s*0.085,P.chestY-0.10,0.135);g.add(connect);});
+  return g;};
+G.trenchCoat=function(c,f){var g=group('trenchCoat');var m=makeMaterial(c,f||'leather');m.side=DBL;
+  g.add(openShell(0.165,0.205,P.shoulderY-(P.kneeY-0.02),(P.shoulderY+P.kneeY-0.02)/2,m,0.8));
+  g.add(openShell(0.10,0.08,0.10,P.neckY+0.01,m,0.9));
+  [-1,1].forEach(function(s){var sl=S(new THREE.Mesh(new THREE.CapsuleGeometry(P.upperArmR+0.025,0.5,6,12),m));sl.position.set(s*(P.shoulderX+0.05),P.shoulderY-0.28,0);sl.rotation.z=s*0.12;g.add(sl);});
+  var belt=S(new THREE.Mesh(new THREE.TorusGeometry(0.17,0.018,8,28),makeMaterial(0x141414,'leather')));belt.rotation.x=Math.PI/2;belt.position.y=P.waistY;g.add(belt);
+  var metal=makeMaterial(0xc9ccd1,'metal');
+  var buckle=S(new THREE.Mesh(new THREE.BoxGeometry(0.05,0.04,0.02),metal));buckle.position.set(0,P.waistY,0.175);g.add(buckle);
   // double-breasted button rows
-  [-1, 1].forEach((s) => {
-    for (let i = 0; i < 4; i++) {
-      const bt = shadow(new THREE.Mesh(new THREE.SphereGeometry(0.011, 10, 8), metal));
-      bt.position.set(s * 0.06, P.chestY + 0.06 - i * 0.075, 0.16);
-      g.add(bt);
-    }
-  });
-  return g;
-}
-
-// ---------------------------------------------------------------------------
-// BOTTOMS
-// ---------------------------------------------------------------------------
-
-function pleatedSkirt(color, finish = 'matte', plaid = true) {
-  const g = group('pleatedSkirt');
-  const mat = plaid
-    ? new THREE.MeshStandardMaterial({ map: makePlaidTexture(), roughness: 0.85, side: DBL })
-    : (() => { const m = makeMaterial(color, finish); m.side = DBL; return m; })();
-  mat.flatShading = true;
-  const topY = P.hipY - 0.02;
-  const hemY = P.hipY - 0.30;
-  const N = 28;
-  // real accordion pleats: cone shell with alternating radial segments pushed in/out
-  const geo = new THREE.CylinderGeometry(0.155, 0.235, topY - hemY, N, 1, true);
-  const pos = geo.attributes.position;
-  for (let i = 0; i < pos.count; i++) {
-    const x = pos.getX(i), z = pos.getZ(i);
-    const ang = Math.atan2(z, x);
-    const seg = Math.round((ang / (Math.PI * 2)) * N);
-    const r = Math.sqrt(x * x + z * z) * ((seg % 2) ? 0.86 : 1.0);
-    pos.setX(i, Math.cos(ang) * r);
-    pos.setZ(i, Math.sin(ang) * r);
-  }
+  [-1,1].forEach(function(s){for(var i=0;i<4;i++){var bt=S(new THREE.Mesh(new THREE.SphereGeometry(0.011,10,8),metal));bt.position.set(s*0.06,P.chestY+0.06-i*0.075,0.16);g.add(bt);}});return g;};
+G.pleatedSkirt=function(c,f){var g=group('pleatedSkirt');
+  var m=new THREE.MeshStandardMaterial({map:makePlaidTexture(),roughness:0.85,side:DBL});m.flatShading=true;
+  // real accordion pleats: take a cone shell and push alternating radial segments in/out
+  var topY=P.hipY-0.02,hemY=P.hipY-0.30,N=28;
+  var geo=new THREE.CylinderGeometry(0.155,0.235,topY-hemY,N,1,true);
+  var pos=geo.attributes.position;
+  for(var i=0;i<pos.count;i++){var x=pos.getX(i),z=pos.getZ(i);var ang=Math.atan2(z,x);var seg=Math.round(ang/TWO*N);var r=Math.sqrt(x*x+z*z)*((seg%2)?0.86:1.0);pos.setX(i,Math.cos(ang)*r);pos.setZ(i,Math.sin(ang)*r);}
   geo.computeVertexNormals();
-  const skirt = shadow(new THREE.Mesh(geo, mat));
-  skirt.position.y = (topY + hemY) / 2;
-  g.add(skirt);
-  // waistband
-  const wb = shadow(new THREE.Mesh(new THREE.TorusGeometry(0.152, 0.016, 8, 26), makeMaterial(0x111111, 'leather')));
-  wb.rotation.x = Math.PI / 2;
-  wb.position.y = topY;
-  g.add(wb);
-  return g;
-}
-
-function miniSkirt(color, finish = 'leather') {
-  const g = group('miniSkirt');
-  const mat = makeMaterial(color, finish); mat.side = DBL;
-  const topY = P.hipY + 0.01;
-  const hemY = P.hipY - 0.18;
-  const pts = [
-    new THREE.Vector2(0.150, topY),
-    new THREE.Vector2(0.158, topY - 0.02),
-    new THREE.Vector2(0.190, P.hipY - 0.08),
-    new THREE.Vector2(0.208, hemY),
-  ];
-  g.add(shadow(new THREE.Mesh(new THREE.LatheGeometry(pts, 28), mat)));
-  // waistband + stud row + side D-ring
-  const wb = shadow(new THREE.Mesh(new THREE.TorusGeometry(0.150, 0.014, 8, 28), makeMaterial(0x111111, 'leather')));
-  wb.rotation.x = Math.PI / 2; wb.position.y = topY;
-  g.add(wb);
-  const metal = makeMaterial(0xc9ccd1, 'metal');
-  const N = 14;
-  for (let i = 0; i < N; i++) {
-    const a = (i / N) * Math.PI * 2;
-    const stud = shadow(new THREE.Mesh(new THREE.SphereGeometry(0.007, 8, 8), metal));
-    stud.position.set(Math.cos(a) * 0.150, topY, Math.sin(a) * 0.150);
-    g.add(stud);
-  }
-  const dring = shadow(new THREE.Mesh(new THREE.TorusGeometry(0.016, 0.005, 8, 16), metal));
-  dring.position.set(0.06, P.hipY - 0.03, 0.150);
-  g.add(dring);
-  return g;
-}
-
-function leatherPants(color, finish = 'leather') {
-  const g = group('leatherPants');
-  const mat = makeMaterial(color, finish);
-  [-1, 1].forEach((s) => g.add(legTube(s, mat, { pad: 0.014, botY: P.ankleY })));
-  // hip/seat cover
-  const hips = shadow(new THREE.Mesh(new THREE.SphereGeometry(0.17, 20, 14), mat));
-  hips.position.set(0, P.hipY - 0.05, 0);
-  hips.scale.set(1, 0.7, 0.9);
-  g.add(hips);
-  return g;
-}
-
-function cargoPants(color, finish = 'matte') {
-  const g = group('cargoPants');
-  const mat = makeMaterial(color, finish);
-  const dk = makeMaterial(0x111111, 'matte');
-  const metal = makeMaterial(0xc9ccd1, 'metal');
-  [-1, 1].forEach((s) => {
-    g.add(legTube(s, mat, { pad: 0.03, botY: P.ankleY }));
+  var sk=S(new THREE.Mesh(geo,m));sk.position.y=(topY+hemY)/2;g.add(sk);
+  var wb=S(new THREE.Mesh(new THREE.TorusGeometry(0.152,0.016,8,26),makeMaterial(0x111111,'leather')));wb.rotation.x=Math.PI/2;wb.position.y=topY;g.add(wb);return g;};
+G.miniSkirt=function(c,f){var g=group('miniSkirt');var m=makeMaterial(c,f||'leather');m.side=DBL;
+  g.add(lathe([[0.150,P.hipY+0.01],[0.158,P.hipY-0.01],[0.190,P.hipY-0.08],[0.208,P.hipY-0.18]],m,28));
+  var wb=S(new THREE.Mesh(new THREE.TorusGeometry(0.150,0.014,8,28),makeMaterial(0x111111,'leather')));wb.rotation.x=Math.PI/2;wb.position.y=P.hipY+0.01;g.add(wb);
+  var metal=makeMaterial(0xc9ccd1,'metal');var N=14;for(var i=0;i<N;i++){var a=i/N*Math.PI*2;var st=S(new THREE.Mesh(new THREE.SphereGeometry(0.007,8,8),metal));st.position.set(Math.cos(a)*0.150,P.hipY+0.01,Math.sin(a)*0.150);g.add(st);}
+  var dr=S(new THREE.Mesh(new THREE.TorusGeometry(0.016,0.005,8,16),metal));dr.position.set(0.06,P.hipY-0.03,0.150);g.add(dr);return g;};
+G.leatherPants=function(c,f){var g=group('leatherPants');var m=makeMaterial(c,f||'leather');
+  [-1,1].forEach(function(s){g.add(legTube(s,m,{pad:0.014,botY:P.ankleY}));});
+  var h=S(new THREE.Mesh(new THREE.SphereGeometry(0.17,20,14),m));h.position.set(0,P.hipY-0.05,0);h.scale.set(1,0.7,0.9);g.add(h);return g;};
+G.cargoPants=function(c,f){var g=group('cargoPants');var m=makeMaterial(c,f||'matte');var dk=makeMaterial(0x111111,'matte');var metal=makeMaterial(0xc9ccd1,'metal');
+  [-1,1].forEach(function(s){g.add(legTube(s,m,{pad:0.03,botY:P.ankleY}));
     // thigh cargo pocket with flap
-    const pkt = shadow(new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.11, 0.06), mat));
-    pkt.position.set(s * (P.legX + 0.105), P.kneeY + 0.14, 0);
-    const flap = shadow(new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.03, 0.065), dk));
-    flap.position.set(s * (P.legX + 0.105), P.kneeY + 0.195, 0);
+    var p=S(new THREE.Mesh(new THREE.BoxGeometry(0.075,0.11,0.06),m));p.position.set(s*(P.legX+0.105),P.kneeY+0.14,0);g.add(p);
+    var flap=S(new THREE.Mesh(new THREE.BoxGeometry(0.08,0.03,0.065),dk));flap.position.set(s*(P.legX+0.105),P.kneeY+0.195,0);g.add(flap);
     // lower knee pocket
-    const pkt2 = shadow(new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.08, 0.055), mat));
-    pkt2.position.set(s * (P.legX + 0.105), P.kneeY - 0.10, 0);
-    g.add(pkt, flap, pkt2);
+    var p2=S(new THREE.Mesh(new THREE.BoxGeometry(0.06,0.08,0.055),m));p2.position.set(s*(P.legX+0.105),P.kneeY-0.10,0);g.add(p2);
     // buckle straps around the calf
-    [0.0, -0.16].forEach((dy) => {
-      const strap = shadow(new THREE.Mesh(new THREE.TorusGeometry(P.calfR + 0.035, 0.01, 8, 22), dk));
-      strap.rotation.x = Math.PI / 2; strap.position.set(s * P.legX, P.kneeY - 0.04 + dy, 0);
-      const bk = shadow(new THREE.Mesh(new THREE.BoxGeometry(0.022, 0.022, 0.012), metal));
-      bk.position.set(s * P.legX, P.kneeY - 0.04 + dy, P.calfR + 0.04);
-      g.add(strap, bk);
-    });
-  });
-  const hips = shadow(new THREE.Mesh(new THREE.SphereGeometry(0.185, 20, 14), mat));
-  hips.position.set(0, P.hipY - 0.05, 0);
-  hips.scale.set(1, 0.7, 0.95);
-  g.add(hips);
-  return g;
-}
+    [0.0,-0.16].forEach(function(dy){var strap=S(new THREE.Mesh(new THREE.TorusGeometry(P.calfR+0.035,0.01,8,22),dk));strap.rotation.x=Math.PI/2;strap.position.set(s*P.legX,P.kneeY-0.04+dy,0);g.add(strap);
+      var bk=S(new THREE.Mesh(new THREE.BoxGeometry(0.022,0.022,0.012),metal));bk.position.set(s*P.legX,P.kneeY-0.04+dy,P.calfR+0.04);g.add(bk);});});
+  var h=S(new THREE.Mesh(new THREE.SphereGeometry(0.185,20,14),m));h.position.set(0,P.hipY-0.05,0);h.scale.set(1,0.7,0.95);g.add(h);return g;};
+G.fishnets=function(c){var g=group('fishnets');var t=makeFishnetTexture('#0a0a0a',10);
+  var m=new THREE.MeshStandardMaterial({map:t,transparent:true,alphaMap:t,roughness:0.7,side:DBL,color:c});
+  [-1,1].forEach(function(s){g.add(legTube(s,m,{pad:0.006,topY:P.hipY-0.02,botY:P.ankleY-0.01}));});return g;};
+G.stripedTights=function(c){var g=group('stripedTights');var t=makeStripeTexture();
+  var m=new THREE.MeshStandardMaterial({map:t,roughness:0.8,side:DBL,color:c});
+  [-1,1].forEach(function(s){g.add(legTube(s,m,{pad:0.004,topY:P.hipY-0.04,botY:P.ankleY}));});return g;};
+G.platformBoots=function(c,f){var g=group('platformBoots');var m=makeMaterial(c,f||'leather');var so=makeMaterial(0x0a0a0a,'matte');
+  [-1,1].forEach(function(s){var sh=S(new THREE.Mesh(new THREE.CylinderGeometry(P.calfR+0.018,P.calfR+0.012,P.kneeY-0.10,14),m));sh.position.set(s*P.legX,(P.kneeY-0.10)/2+0.08,0);
+    var ft=S(new THREE.Mesh(new THREE.BoxGeometry(0.085,0.07,0.21),m));ft.position.set(s*P.legX,0.10,0.045);
+    var pl=S(new THREE.Mesh(new THREE.BoxGeometry(0.10,0.07,0.24),so));pl.position.set(s*P.legX,0.035,0.05);g.add(sh,ft,pl);
+    for(var j=0;j<5;j++){var tr=S(new THREE.Mesh(new THREE.BoxGeometry(0.105,0.012,0.022),so));tr.position.set(s*P.legX,0.012,-0.05+j*0.045);g.add(tr);}
+    var metal=makeMaterial(0xc9ccd1,'metal');for(var i=0;i<3;i++){var bk=S(new THREE.Mesh(new THREE.TorusGeometry(0.018,0.006,6,14),metal));bk.position.set(s*P.legX,0.18+i*0.10,P.calfR+0.02);g.add(bk);}
+    var la=makeMaterial(0xe8e8e8,'matte');for(var n=0;n<5;n++){var lc=S(new THREE.Mesh(new THREE.CylinderGeometry(0.0035,0.0035,0.05,6),la));lc.rotation.z=Math.PI/2;lc.position.set(s*P.legX,0.155+n*0.062,P.calfR+0.028);g.add(lc);}});return g;};
+G.combatBoots=function(c,f){var g=group('combatBoots');var m=makeMaterial(c,f||'leather');var so=makeMaterial(0x0a0a0a,'matte');
+  [-1,1].forEach(function(s){var sh=S(new THREE.Mesh(new THREE.CylinderGeometry(P.calfR+0.02,P.calfR+0.01,0.22,14),m));sh.position.set(s*P.legX,0.22,0);
+    var ft=S(new THREE.Mesh(new THREE.BoxGeometry(0.085,0.08,0.21),m));ft.position.set(s*P.legX,0.10,0.045);
+    var pl=S(new THREE.Mesh(new THREE.BoxGeometry(0.095,0.05,0.23),so));pl.position.set(s*P.legX,0.04,0.05);g.add(sh,ft,pl);
+    var la=makeMaterial(0xe8e8e8,'matte');for(var i=0;i<5;i++){var l=S(new THREE.Mesh(new THREE.CylinderGeometry(0.004,0.004,0.06,6),la));l.rotation.z=Math.PI/2;l.position.set(s*P.legX,0.14+i*0.035,P.calfR+0.02);g.add(l);}});return g;};
+G.choker=function(c,f){var g=group('choker');var m=makeMaterial(c,f||'leather');var metal=makeMaterial(0xc9ccd1,'metal');
+  var b=S(new THREE.Mesh(new THREE.TorusGeometry(P.neckR+0.01,0.012,10,28),m));b.rotation.x=Math.PI/2;b.position.y=P.neckY+0.04;b.scale.set(1,1,0.85);g.add(b);
+  for(var i=0;i<12;i++){var a=i/12*TWO;var sp=S(new THREE.Mesh(new THREE.ConeGeometry(0.008,0.022,8),metal));sp.position.set(Math.cos(a)*(P.neckR+0.012),P.neckY+0.04,Math.sin(a)*(P.neckR+0.012)*0.85);sp.lookAt(sp.position.clone().multiplyScalar(2));sp.rotateX(Math.PI/2);g.add(sp);}return g;};
+G.spikedBelt=function(c,f){var g=group('spikedBelt');var m=makeMaterial(c,f||'leather');var metal=makeMaterial(0xc9ccd1,'metal');
+  var b=S(new THREE.Mesh(new THREE.TorusGeometry(P.hipR-0.005,0.016,10,30),m));b.rotation.x=Math.PI/2;b.position.y=P.hipY+0.01;b.scale.set(1,1,0.92);g.add(b);
+  for(var i=0;i<16;i++){var a=i/16*TWO,r=P.hipR+0.006;var st=S(new THREE.Mesh(new THREE.ConeGeometry(0.01,0.02,8),metal));st.position.set(Math.cos(a)*r,P.hipY+0.01,Math.sin(a)*r*0.92);st.lookAt(st.position.clone().multiplyScalar(2));st.rotateX(Math.PI/2);g.add(st);}return g;};
+G.fingerlessGloves=function(c,f){var g=group('gloves');var m=makeMaterial(c,f||'leather');
+  [-1,1].forEach(function(s){var fore=S(new THREE.Mesh(new THREE.CapsuleGeometry(P.foreArmR+0.012,0.22,6,12),m));fore.position.set(s*(P.shoulderX+0.085),P.shoulderY-0.44,0);fore.rotation.z=s*0.10;
+    var palm=S(new THREE.Mesh(new THREE.SphereGeometry(0.05,12,10),m));palm.position.set(s*(P.shoulderX+0.10),P.shoulderY-0.56,0);palm.scale.set(0.8,1.1,0.5);g.add(fore,palm);});return g;};
+G.thighGarters=function(c,f){var g=group('garters');var m=makeMaterial(c,f||'leather');var metal=makeMaterial(0xc9ccd1,'metal');
+  [-1,1].forEach(function(s){var band=S(new THREE.Mesh(new THREE.TorusGeometry(P.thighR+0.018,0.01,8,22),m));band.rotation.x=Math.PI/2;band.position.set(s*P.legX,P.kneeY+0.22,0);g.add(band);
+    var strap=S(new THREE.Mesh(new THREE.BoxGeometry(0.015,0.10,0.012),m));strap.position.set(s*P.legX,P.kneeY+0.16,P.thighR+0.01);g.add(strap);
+    var clip=S(new THREE.Mesh(new THREE.SphereGeometry(0.012,8,8),metal));clip.position.set(s*P.legX,P.kneeY+0.11,P.thighR+0.01);g.add(clip);});return g;};
+G.catEars=function(c,f){var g=group('catEars');var m=makeMaterial(c,f||'velvet');var pink=makeMaterial(0xff7bbf,'velvet');
+  [-1,1].forEach(function(s){var e=S(new THREE.Mesh(new THREE.ConeGeometry(0.045,0.09,4),m));e.position.set(s*0.06,P.topY+0.02,-0.01);e.rotation.z=s*0.2;
+    var i=S(new THREE.Mesh(new THREE.ConeGeometry(0.025,0.05,4),pink));i.position.set(s*0.06,P.topY+0.02,0.01);i.rotation.z=s*0.2;g.add(e,i);});return g;};
 
-// ---------------------------------------------------------------------------
-// LEGWEAR
-// ---------------------------------------------------------------------------
-
-function fishnets(color, finish = 'mesh') {
-  const g = group('fishnets');
-  const tex = makeFishnetTexture('#0a0a0a', 10);
-  const mat = new THREE.MeshStandardMaterial({ map: tex, transparent: true, alphaMap: tex, roughness: 0.7, side: DBL, color });
-  [-1, 1].forEach((s) => g.add(legTube(s, mat, { pad: 0.006, topY: P.hipY - 0.02, botY: P.ankleY - 0.01 })));
-  return g;
-}
-
-function stripedTights(color, finish = 'matte') {
-  const g = group('stripedTights');
-  // horizontal stripes via canvas
-  const c = document.createElement('canvas'); c.width = 16; c.height = 32;
-  const ctx = c.getContext('2d');
-  for (let i = 0; i < 8; i++) { ctx.fillStyle = i % 2 ? '#1a1a1a' : '#dddddd'; ctx.fillRect(0, i * 4, 16, 4); }
-  const tex = new THREE.CanvasTexture(c); tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(1, 8); tex.colorSpace = THREE.SRGBColorSpace;
-  const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.8, side: DBL, color });
-  [-1, 1].forEach((s) => g.add(legTube(s, mat, { pad: 0.004, topY: P.hipY - 0.04, botY: P.ankleY })));
-  return g;
-}
-
-// ---------------------------------------------------------------------------
-// FOOTWEAR
-// ---------------------------------------------------------------------------
-
-function platformBoots(color, finish = 'leather') {
-  const g = group('platformBoots');
-  const mat = makeMaterial(color, finish);
-  const sole = makeMaterial(0x0a0a0a, 'matte');
-  [-1, 1].forEach((s) => {
-    // tall shaft to below the knee
-    const shaft = shadow(new THREE.Mesh(new THREE.CylinderGeometry(P.calfR + 0.018, P.calfR + 0.012, P.kneeY - 0.10, 14), mat));
-    shaft.position.set(s * P.legX, (P.kneeY - 0.10) / 2 + 0.08, 0);
-    // foot
-    const foot = shadow(new THREE.Mesh(new THREE.BoxGeometry(0.085, 0.07, 0.21), mat));
-    foot.position.set(s * P.legX, 0.10, 0.045);
-    // chunky platform sole
-    const platform = shadow(new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.07, 0.24), sole));
-    platform.position.set(s * P.legX, 0.035, 0.05);
-    g.add(shaft, foot, platform);
-    // sole tread ridges
-    for (let j = 0; j < 5; j++) {
-      const tr = shadow(new THREE.Mesh(new THREE.BoxGeometry(0.105, 0.012, 0.022), sole));
-      tr.position.set(s * P.legX, 0.012, -0.05 + j * 0.045);
-      g.add(tr);
-    }
-    // buckles
-    const metal = makeMaterial(0xc9ccd1, 'metal');
-    for (let i = 0; i < 3; i++) {
-      const bk = shadow(new THREE.Mesh(new THREE.TorusGeometry(0.018, 0.006, 6, 14), metal));
-      bk.position.set(s * (P.legX), 0.18 + i * 0.10, P.calfR + 0.02);
-      g.add(bk);
-    }
-    // front laces
-    const lace = makeMaterial(0xe8e8e8, 'matte');
-    for (let n = 0; n < 5; n++) {
-      const lc = shadow(new THREE.Mesh(new THREE.CylinderGeometry(0.0035, 0.0035, 0.05, 6), lace));
-      lc.rotation.z = Math.PI / 2;
-      lc.position.set(s * P.legX, 0.155 + n * 0.062, P.calfR + 0.028);
-      g.add(lc);
-    }
-  });
-  return g;
-}
-
-function combatBoots(color, finish = 'leather') {
-  const g = group('combatBoots');
-  const mat = makeMaterial(color, finish);
-  const sole = makeMaterial(0x0a0a0a, 'matte');
-  [-1, 1].forEach((s) => {
-    const shaft = shadow(new THREE.Mesh(new THREE.CylinderGeometry(P.calfR + 0.02, P.calfR + 0.01, 0.22, 14), mat));
-    shaft.position.set(s * P.legX, 0.22, 0);
-    const foot = shadow(new THREE.Mesh(new THREE.BoxGeometry(0.085, 0.08, 0.21), mat));
-    foot.position.set(s * P.legX, 0.10, 0.045);
-    const platform = shadow(new THREE.Mesh(new THREE.BoxGeometry(0.095, 0.05, 0.23), sole));
-    platform.position.set(s * P.legX, 0.04, 0.05);
-    g.add(shaft, foot, platform);
-    // laces
-    const lace = makeMaterial(0xe8e8e8, 'matte');
-    for (let i = 0; i < 5; i++) {
-      const l = shadow(new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.004, 0.06, 6), lace));
-      l.rotation.z = Math.PI / 2;
-      l.position.set(s * P.legX, 0.14 + i * 0.035, P.calfR + 0.02);
-      g.add(l);
-    }
-  });
-  return g;
-}
-
-// ---------------------------------------------------------------------------
-// ACCESSORIES (can stack)
-// ---------------------------------------------------------------------------
-
-function choker(color, finish = 'leather') {
-  const g = group('choker');
-  const mat = makeMaterial(color, finish);
-  const band = shadow(new THREE.Mesh(new THREE.TorusGeometry(P.neckR + 0.01, 0.012, 10, 28), mat));
-  band.rotation.x = Math.PI / 2;
-  band.position.y = P.neckY + 0.04;
-  band.scale.set(1, 1, 0.85);
-  g.add(band);
-  // spikes
-  const metal = makeMaterial(0xc9ccd1, 'metal');
-  for (let i = 0; i < 12; i++) {
-    const a = (i / 12) * TWO_PI;
-    const spike = shadow(new THREE.Mesh(new THREE.ConeGeometry(0.008, 0.022, 8), metal));
-    spike.position.set(Math.cos(a) * (P.neckR + 0.012), P.neckY + 0.04, Math.sin(a) * (P.neckR + 0.012) * 0.85);
-    spike.lookAt(spike.position.clone().multiplyScalar(2));
-    spike.rotateX(Math.PI / 2);
-    g.add(spike);
-  }
-  return g;
-}
-
-function spikedBelt(color, finish = 'leather') {
-  const g = group('spikedBelt');
-  const mat = makeMaterial(color, finish);
-  const belt = shadow(new THREE.Mesh(new THREE.TorusGeometry(P.hipR - 0.005, 0.016, 10, 30), mat));
-  belt.rotation.x = Math.PI / 2;
-  belt.position.y = P.hipY + 0.01;
-  belt.scale.set(1, 1, 0.92);
-  g.add(belt);
-  const metal = makeMaterial(0xc9ccd1, 'metal');
-  for (let i = 0; i < 16; i++) {
-    const a = (i / 16) * TWO_PI;
-    const stud = shadow(new THREE.Mesh(new THREE.ConeGeometry(0.01, 0.02, 8), metal));
-    const r = P.hipR + 0.006;
-    stud.position.set(Math.cos(a) * r, P.hipY + 0.01, Math.sin(a) * r * 0.92);
-    stud.lookAt(stud.position.clone().multiplyScalar(2));
-    stud.rotateX(Math.PI / 2);
-    g.add(stud);
-  }
-  return g;
-}
-
-function fingerlessGloves(color, finish = 'leather') {
-  const g = group('gloves');
-  const mat = makeMaterial(color, finish);
-  [-1, 1].forEach((s) => {
-    const fore = shadow(new THREE.Mesh(new THREE.CapsuleGeometry(P.foreArmR + 0.012, 0.22, 6, 12), mat));
-    fore.position.set(s * (P.shoulderX + 0.085), P.shoulderY - 0.44, 0);
-    fore.rotation.z = s * 0.10;
-    const palm = shadow(new THREE.Mesh(new THREE.SphereGeometry(0.05, 12, 10), mat));
-    palm.position.set(s * (P.shoulderX + 0.10), P.shoulderY - 0.56, 0);
-    palm.scale.set(0.8, 1.1, 0.5);
-    g.add(fore, palm);
-  });
-  return g;
-}
-
-function catEars(color, finish = 'velvet') {
-  const g = group('catEars');
-  const mat = makeMaterial(color, finish);
-  const pink = makeMaterial(0xff7bbf, 'velvet');
-  [-1, 1].forEach((s) => {
-    const ear = shadow(new THREE.Mesh(new THREE.ConeGeometry(0.045, 0.09, 4), mat));
-    ear.position.set(s * 0.06, P.topY + 0.02, -0.01);
-    ear.rotation.z = s * 0.2;
-    const inner = shadow(new THREE.Mesh(new THREE.ConeGeometry(0.025, 0.05, 4), pink));
-    inner.position.set(s * 0.06, P.topY + 0.02, 0.01);
-    inner.rotation.z = s * 0.2;
-    g.add(ear, inner);
-  });
-  return g;
-}
-
-function thighGarters(color, finish = 'leather') {
-  const g = group('garters');
-  const mat = makeMaterial(color, finish);
-  const metal = makeMaterial(0xc9ccd1, 'metal');
-  [-1, 1].forEach((s) => {
-    const band = shadow(new THREE.Mesh(new THREE.TorusGeometry(P.thighR + 0.018, 0.01, 8, 22), mat));
-    band.rotation.x = Math.PI / 2;
-    band.position.set(s * P.legX, P.kneeY + 0.22, 0);
-    g.add(band);
-    // dangling clip strap
-    const strap = shadow(new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.10, 0.012), mat));
-    strap.position.set(s * P.legX, P.kneeY + 0.16, P.thighR + 0.01);
-    g.add(strap);
-    const clip = shadow(new THREE.Mesh(new THREE.SphereGeometry(0.012, 8, 8), metal));
-    clip.position.set(s * P.legX, P.kneeY + 0.11, P.thighR + 0.01);
-    g.add(clip);
-  });
-  return g;
-}
-
-
-__exports.cropTop = cropTop;
-__exports.corset = corset;
-__exports.meshTop = meshTop;
-__exports.bandTee = bandTee;
-__exports.leatherJacket = leatherJacket;
-__exports.harness = harness;
-__exports.trenchCoat = trenchCoat;
-__exports.pleatedSkirt = pleatedSkirt;
-__exports.miniSkirt = miniSkirt;
-__exports.leatherPants = leatherPants;
-__exports.cargoPants = cargoPants;
-__exports.fishnets = fishnets;
-__exports.stripedTights = stripedTights;
-__exports.platformBoots = platformBoots;
-__exports.combatBoots = combatBoots;
-__exports.choker = choker;
-__exports.spikedBelt = spikedBelt;
-__exports.fingerlessGloves = fingerlessGloves;
-__exports.catEars = catEars;
-__exports.thighGarters = thighGarters;
-};
-
-__defs['avatar'] = function(__exports){
-const { P } = __require('proportions');
-const { SKIN, HAIR } = __require('materials');
-
-// Builds a stylized feminine avatar from primitives and returns a Group.
-// The Group is the parent that every garment also attaches to, so clothing
-// and body move/rotate together on the turntable.
-function buildAvatar() {
-  const g = new THREE.Group();
-  g.name = 'avatar';
-
-  const add = (mesh) => { mesh.castShadow = true; mesh.receiveShadow = true; g.add(mesh); return mesh; };
-
-  // --- Torso (hourglass via lathe) ---
-  const torsoPts = [];
-  // smooth hourglass profile
-  const prof = [
-    [0.155, P.hipY - 0.04], [0.168, P.hipY + 0.02], [0.150, P.hipY + 0.07],
-    [0.122, P.waistY], [0.135, P.waistY + 0.08],
-    [0.156, P.chestY - 0.02], [0.150, P.chestY + 0.05],
-    [0.105, P.shoulderY - 0.03], [0.070, P.neckY - 0.02], [0.056, P.neckY + 0.02],
-  ];
-  prof.forEach(([r, y]) => torsoPts.push(new THREE.Vector2(r, y)));
-  const torso = add(new THREE.Mesh(new THREE.LatheGeometry(torsoPts, 32), SKIN));
-
-  // chest definition
-  const bustGeo = new THREE.SphereGeometry(0.072, 20, 16);
-  [-1, 1].forEach((s) => {
-    const b = add(new THREE.Mesh(bustGeo, SKIN));
-    b.position.set(s * 0.062, P.chestY + 0.01, 0.105);
-    b.scale.set(1, 0.9, 0.8);
-  });
-
-  // --- Pelvis cap ---
-  const pelvis = add(new THREE.Mesh(new THREE.SphereGeometry(0.155, 24, 16), SKIN));
-  pelvis.position.set(0, P.hipY - 0.05, 0);
-  pelvis.scale.set(1, 0.7, 0.85);
-
-  // subtle navel + collarbones
-  const deep = new THREE.MeshStandardMaterial({ color: 0xb98a7a, roughness: 0.7 });
-  const navel = add(new THREE.Mesh(new THREE.SphereGeometry(0.012, 10, 8), deep));
-  navel.position.set(0, P.waistY - 0.05, 0.118); navel.scale.set(1, 1.3, 0.5);
-  [-1, 1].forEach((s) => {
-    const cb = add(new THREE.Mesh(new THREE.CapsuleGeometry(0.007, 0.07, 4, 8), SKIN));
-    cb.position.set(s * 0.05, P.shoulderY - 0.02, 0.092); cb.rotation.set(0, 0, s * 0.55);
-  });
-
-  // --- Neck + head ---
-  const neck = add(new THREE.Mesh(new THREE.CylinderGeometry(P.neckR, P.neckR + 0.01, 0.09, 16), SKIN));
-  neck.position.set(0, P.neckY + 0.05, 0);
-
-  const head = add(new THREE.Mesh(new THREE.SphereGeometry(P.headR, 28, 24), SKIN));
-  head.position.set(0, P.headY, 0);
-  head.scale.set(0.92, 1.08, 0.95);
-
-  // hair: crown volume + parted bangs + long back + side strands framing the face
-  const hairBack = add(new THREE.Mesh(new THREE.SphereGeometry(P.headR + 0.02, 24, 20), HAIR));
-  hairBack.position.set(0, P.headY + 0.01, -0.015);
-  hairBack.scale.set(1.05, 1.18, 1.05);
-  [-1, 1].forEach((s) => {
-    const bang = add(new THREE.Mesh(new THREE.BoxGeometry(0.105, 0.082, 0.10), HAIR));
-    bang.position.set(s * 0.052, P.headY + 0.056, 0.044);
-    bang.rotation.set(-0.14, 0, s * 0.10);
-  });
-  const backLen = add(new THREE.Mesh(new THREE.BoxGeometry(0.215, 0.42, 0.13), HAIR));
-  backLen.position.set(0, P.headY - 0.19, -0.05);
-  [-1, 1].forEach((s) => {
-    const strand = add(new THREE.Mesh(new THREE.CapsuleGeometry(0.046, 0.34, 8, 12), HAIR));
-    strand.position.set(s * 0.108, P.headY - 0.19, 0.015);
-    const faceStrand = add(new THREE.Mesh(new THREE.CapsuleGeometry(0.022, 0.26, 6, 10), HAIR));
-    faceStrand.position.set(s * 0.098, P.headY - 0.12, 0.055);
-  });
-
-  // face: eyes with iris, winged eyeliner, brows, nose, lips
-  const eyeW = new THREE.MeshStandardMaterial({ color: 0xf2eef5, roughness: 0.3 });
-  const iris = new THREE.MeshStandardMaterial({ color: 0x4b2e6b, roughness: 0.25 });
-  const liner = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.4 });
-  const lipMat = new THREE.MeshStandardMaterial({ color: 0x8a1f3a, roughness: 0.38 });
-  [-1, 1].forEach((s) => {
-    const w = add(new THREE.Mesh(new THREE.SphereGeometry(0.017, 14, 12), eyeW));
-    w.position.set(s * 0.040, P.headY + 0.012, P.headR * 0.90); w.scale.set(1.2, 0.82, 0.6);
-    const ir = add(new THREE.Mesh(new THREE.SphereGeometry(0.0085, 12, 12), iris));
-    ir.position.set(s * 0.044, P.headY + 0.012, P.headR * 0.965);
-    const ln = add(new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.006, 0.01), liner));
-    ln.position.set(s * 0.040, P.headY + 0.03, P.headR * 0.92); ln.rotation.z = -s * 0.18;
-    const br = add(new THREE.Mesh(new THREE.BoxGeometry(0.042, 0.008, 0.012), HAIR));
-    br.position.set(s * 0.043, P.headY + 0.052, P.headR * 0.89); br.rotation.z = -s * 0.12;
-  });
-  const nose = add(new THREE.Mesh(new THREE.SphereGeometry(0.016, 12, 10), SKIN));
-  nose.position.set(0, P.headY - 0.018, P.headR * 0.95); nose.scale.set(0.7, 1.2, 1.3);
-  const lip = add(new THREE.Mesh(new THREE.SphereGeometry(0.024, 16, 10), lipMat));
-  lip.position.set(0, P.headY - 0.055, P.headR * 0.90); lip.scale.set(1.45, 0.62, 0.6);
-
-  // --- Arms (slightly out, hanging) ---
-  function limb(rTop, rBot, len) {
-    const geo = new THREE.CapsuleGeometry((rTop + rBot) / 2, len, 8, 14);
-    return geo;
-  }
-  [-1, 1].forEach((s) => {
-    const shoulder = add(new THREE.Mesh(new THREE.SphereGeometry(0.058, 16, 14), SKIN));
-    shoulder.position.set(s * P.shoulderX, P.shoulderY, 0);
-
-    const upper = add(new THREE.Mesh(limb(P.upperArmR, P.foreArmR, 0.26), SKIN));
-    upper.position.set(s * (P.shoulderX + 0.03), P.shoulderY - 0.16, 0);
-    upper.rotation.z = s * 0.14;
-
-    const elbow = add(new THREE.Mesh(new THREE.SphereGeometry(0.045, 14, 12), SKIN));
-    elbow.position.set(s * (P.shoulderX + 0.07), P.shoulderY - 0.30, 0);
-
-    const fore = add(new THREE.Mesh(limb(P.foreArmR, 0.034, 0.24), SKIN));
-    fore.position.set(s * (P.shoulderX + 0.085), P.shoulderY - 0.44, 0.0);
-    fore.rotation.z = s * 0.10;
-
-    const palm = add(new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.075, 0.026), SKIN));
-    palm.position.set(s * (P.shoulderX + 0.10), P.shoulderY - 0.555, 0); palm.rotation.z = s * 0.10;
-    const fingers = add(new THREE.Mesh(new THREE.BoxGeometry(0.046, 0.05, 0.022), SKIN));
-    fingers.position.set(s * (P.shoulderX + 0.105), P.shoulderY - 0.605, 0); fingers.rotation.z = s * 0.10;
-    const thumb = add(new THREE.Mesh(new THREE.CapsuleGeometry(0.012, 0.03, 4, 8), SKIN));
-    thumb.position.set(s * (P.shoulderX + 0.075), P.shoulderY - 0.55, 0.012); thumb.rotation.z = s * 0.6;
-  });
-
-  // --- Legs ---
-  [-1, 1].forEach((s) => {
-    const thigh = add(new THREE.Mesh(new THREE.CapsuleGeometry(P.thighR, 0.34, 8, 14), SKIN));
-    thigh.position.set(s * P.legX, (P.hipY + P.kneeY) / 2 + 0.02, 0);
-    thigh.scale.set(1, 1, 0.95);
-
-    const knee = add(new THREE.Mesh(new THREE.SphereGeometry(0.06, 14, 12), SKIN));
-    knee.position.set(s * P.legX, P.kneeY, 0);
-
-    const calf = add(new THREE.Mesh(new THREE.CapsuleGeometry(P.calfR, 0.32, 8, 14), SKIN));
-    calf.position.set(s * P.legX, (P.kneeY + P.ankleY) / 2 + 0.02, 0);
-
-    const foot = add(new THREE.Mesh(new THREE.BoxGeometry(0.068, 0.045, 0.14), SKIN));
-    foot.position.set(s * P.legX, P.ankleY - 0.045, 0.03);
-    const toe = add(new THREE.Mesh(new THREE.BoxGeometry(0.066, 0.032, 0.05), SKIN));
-    toe.position.set(s * P.legX, P.ankleY - 0.052, 0.105); toe.rotation.x = 0.18;
-    const heel = add(new THREE.Mesh(new THREE.SphereGeometry(0.035, 12, 10), SKIN));
-    heel.position.set(s * P.legX, P.ankleY - 0.03, -0.035); heel.scale.set(0.95, 0.85, 1);
-  });
-
-  return g;
-}
-
-
-__exports.buildAvatar = buildAvatar;
-};
-
-__defs['catalog'] = function(__exports){
-const G = __require('garments');
-
-// Goth / industrial colour palette offered as swatches per garment.
-const PALETTE = [
-  { name: 'Jet Black', hex: 0x14131a },
-  { name: 'Blood Red', hex: 0x7a1020 },
-  { name: 'Violet', hex: 0x5b2a86 },
-  { name: 'Magenta', hex: 0xc01f7b },
-  { name: 'Toxic Green', hex: 0x3fae5a },
-  { name: 'Steel', hex: 0x6b7280 },
-  { name: 'Bone', hex: 0xe7e2d6 },
-  { name: 'Oxblood', hex: 0x4a0e16 },
-  { name: 'Electric Blue', hex: 0x2563eb },
-  { name: 'Pastel Pink', hex: 0xff9ec7 },
+/* ---------------- catalog ---------------- */
+var PALETTE=[
+  {name:'Jet Black',hex:0x14131a},{name:'Blood Red',hex:0x7a1020},{name:'Violet',hex:0x5b2a86},
+  {name:'Magenta',hex:0xc01f7b},{name:'Toxic Green',hex:0x3fae5a},{name:'Steel',hex:0x6b7280},
+  {name:'Bone',hex:0xe7e2d6},{name:'Oxblood',hex:0x4a0e16},{name:'Electric Blue',hex:0x2563eb},{name:'Pastel Pink',hex:0xff9ec7}
+];
+var SLOTS=[
+  {id:'top',label:'Tops',multi:false},{id:'outerwear',label:'Outerwear',multi:false},
+  {id:'bottom',label:'Bottoms',multi:false},{id:'legwear',label:'Legwear',multi:false},
+  {id:'footwear',label:'Footwear',multi:false},{id:'accessory',label:'Accessories',multi:true}
+];
+var ITEMS=[
+  {id:'crop',name:'Cropped Tank',slot:'top',build:G.cropTop,finish:'matte',color:0x14131a,tag:'goth'},
+  {id:'corset',name:'Lace-Up Corset',slot:'top',build:G.corset,finish:'leather',color:0x4a0e16,tag:'goth'},
+  {id:'mesh',name:'Long-Sleeve Mesh',slot:'top',build:G.meshTop,finish:'mesh',color:0x14131a,tag:'goth'},
+  {id:'bandtee',name:'Cropped Band Tee',slot:'top',build:G.bandTee,finish:'matte',color:0x14131a,tag:'grunge'},
+  {id:'jacket',name:'Studded Moto Jacket',slot:'outerwear',build:G.leatherJacket,finish:'leather',color:0x14131a,tag:'industrial'},
+  {id:'harness',name:'O-Ring Harness',slot:'outerwear',build:G.harness,finish:'leather',color:0x14131a,tag:'industrial'},
+  {id:'trench',name:'Belted Trench Coat',slot:'outerwear',build:G.trenchCoat,finish:'leather',color:0x14131a,tag:'goth'},
+  {id:'plaid',name:'Plaid Pleated Skirt',slot:'bottom',build:G.pleatedSkirt,finish:'matte',color:0x7a1020,tag:'grunge'},
+  {id:'mini',name:'Vinyl Mini Skirt',slot:'bottom',build:G.miniSkirt,finish:'leather',color:0x14131a,tag:'goth'},
+  {id:'lpants',name:'Faux-Leather Pants',slot:'bottom',build:G.leatherPants,finish:'leather',color:0x14131a,tag:'goth'},
+  {id:'cargo',name:'Strap Cargo Pants',slot:'bottom',build:G.cargoPants,finish:'matte',color:0x2a2d34,tag:'industrial'},
+  {id:'fishnet',name:'Fishnet Stockings',slot:'legwear',build:G.fishnets,finish:'mesh',color:0x14131a,tag:'goth'},
+  {id:'stripe',name:'Striped Tights',slot:'legwear',build:G.stripedTights,finish:'matte',color:0xffffff,tag:'grunge'},
+  {id:'platform',name:'Platform Buckle Boots',slot:'footwear',build:G.platformBoots,finish:'leather',color:0x14131a,tag:'goth'},
+  {id:'combat',name:'Laced Combat Boots',slot:'footwear',build:G.combatBoots,finish:'leather',color:0x14131a,tag:'industrial'},
+  {id:'choker',name:'Spiked Choker',slot:'accessory',build:G.choker,finish:'leather',color:0x14131a,tag:'goth'},
+  {id:'belt',name:'Studded Belt',slot:'accessory',build:G.spikedBelt,finish:'leather',color:0x14131a,tag:'industrial'},
+  {id:'gloves',name:'Fingerless Gloves',slot:'accessory',build:G.fingerlessGloves,finish:'leather',color:0x14131a,tag:'goth'},
+  {id:'garters',name:'Thigh Garters',slot:'accessory',build:G.thighGarters,finish:'leather',color:0x14131a,tag:'goth'},
+  {id:'ears',name:'Cat Ears',slot:'accessory',build:G.catEars,finish:'velvet',color:0x14131a,tag:'pastel goth'}
+];
+var PRESETS=[
+  {name:'Full Goth',items:{top:'corset',outerwear:'trench',bottom:'mini',legwear:'fishnet',footwear:'platform',accessory:['choker','gloves']},colors:{corset:0x4a0e16,trench:0x14131a,mini:0x14131a}},
+  {name:'Cyber Industrial',items:{top:'mesh',outerwear:'harness',bottom:'cargo',legwear:null,footwear:'combat',accessory:['belt','choker']},colors:{mesh:0x14131a,harness:0x14131a,cargo:0x2a2d34}},
+  {name:'Grunge Schoolgirl',items:{top:'bandtee',outerwear:'jacket',bottom:'plaid',legwear:'stripe',footwear:'combat',accessory:['choker']},colors:{bandtee:0x14131a,jacket:0x14131a}},
+  {name:'Pastel Goth',items:{top:'crop',outerwear:null,bottom:'mini',legwear:'fishnet',footwear:'platform',accessory:['ears','choker','garters']},colors:{crop:0xff9ec7,mini:0x5b2a86,choker:0xff9ec7}}
 ];
 
-// Slots — single-equip slots replace their current item; "accessory" stacks.
-const SLOTS = [
-  { id: 'top', label: 'Tops', multi: false },
-  { id: 'outerwear', label: 'Outerwear', multi: false },
-  { id: 'bottom', label: 'Bottoms', multi: false },
-  { id: 'legwear', label: 'Legwear', multi: false },
-  { id: 'footwear', label: 'Footwear', multi: false },
-  { id: 'accessory', label: 'Accessories', multi: true },
-];
-
-// The catalog. Each item: id, name, slot, build(color,finish), finish, color, tag.
-const ITEMS = [
-  // TOPS
-  { id: 'crop', name: 'Cropped Tank', slot: 'top', build: G.cropTop, finish: 'matte', color: 0x14131a, tag: 'goth' },
-  { id: 'corset', name: 'Lace-Up Corset', slot: 'top', build: G.corset, finish: 'leather', color: 0x4a0e16, tag: 'goth' },
-  { id: 'mesh', name: 'Long-Sleeve Mesh', slot: 'top', build: G.meshTop, finish: 'mesh', color: 0x14131a, tag: 'goth' },
-  { id: 'bandtee', name: 'Cropped Band Tee', slot: 'top', build: G.bandTee, finish: 'matte', color: 0x14131a, tag: 'grunge' },
-
-  // OUTERWEAR
-  { id: 'jacket', name: 'Studded Moto Jacket', slot: 'outerwear', build: G.leatherJacket, finish: 'leather', color: 0x14131a, tag: 'industrial' },
-  { id: 'harness', name: 'O-Ring Harness', slot: 'outerwear', build: G.harness, finish: 'leather', color: 0x14131a, tag: 'industrial' },
-  { id: 'trench', name: 'Belted Trench Coat', slot: 'outerwear', build: G.trenchCoat, finish: 'leather', color: 0x14131a, tag: 'goth' },
-
-  // BOTTOMS
-  { id: 'plaid', name: 'Plaid Pleated Skirt', slot: 'bottom', build: (c, f) => G.pleatedSkirt(c, f, true), finish: 'matte', color: 0x7a1020, tag: 'grunge' },
-  { id: 'mini', name: 'Vinyl Mini Skirt', slot: 'bottom', build: G.miniSkirt, finish: 'leather', color: 0x14131a, tag: 'goth' },
-  { id: 'lpants', name: 'Faux-Leather Pants', slot: 'bottom', build: G.leatherPants, finish: 'leather', color: 0x14131a, tag: 'goth' },
-  { id: 'cargo', name: 'Strap Cargo Pants', slot: 'bottom', build: G.cargoPants, finish: 'matte', color: 0x2a2d34, tag: 'industrial' },
-
-  // LEGWEAR
-  { id: 'fishnet', name: 'Fishnet Stockings', slot: 'legwear', build: G.fishnets, finish: 'mesh', color: 0x14131a, tag: 'goth' },
-  { id: 'stripe', name: 'Striped Tights', slot: 'legwear', build: G.stripedTights, finish: 'matte', color: 0xffffff, tag: 'grunge' },
-
-  // FOOTWEAR
-  { id: 'platform', name: 'Platform Buckle Boots', slot: 'footwear', build: G.platformBoots, finish: 'leather', color: 0x14131a, tag: 'goth' },
-  { id: 'combat', name: 'Laced Combat Boots', slot: 'footwear', build: G.combatBoots, finish: 'leather', color: 0x14131a, tag: 'industrial' },
-
-  // ACCESSORIES
-  { id: 'choker', name: 'Spiked Choker', slot: 'accessory', build: G.choker, finish: 'leather', color: 0x14131a, tag: 'goth' },
-  { id: 'belt', name: 'Studded Belt', slot: 'accessory', build: G.spikedBelt, finish: 'leather', color: 0x14131a, tag: 'industrial' },
-  { id: 'gloves', name: 'Fingerless Gloves', slot: 'accessory', build: G.fingerlessGloves, finish: 'leather', color: 0x14131a, tag: 'goth' },
-  { id: 'garters', name: 'Thigh Garters', slot: 'accessory', build: G.thighGarters, finish: 'leather', color: 0x14131a, tag: 'goth' },
-  { id: 'ears', name: 'Cat Ears', slot: 'accessory', build: G.catEars, finish: 'velvet', color: 0x14131a, tag: 'pastel goth' },
-];
-
-// One-click looks that set several slots at once.
-const PRESETS = [
-  {
-    name: 'Full Goth',
-    items: { top: 'corset', outerwear: 'trench', bottom: 'mini', legwear: 'fishnet', footwear: 'platform', accessory: ['choker', 'gloves'] },
-    colors: { corset: 0x4a0e16, trench: 0x14131a, mini: 0x14131a },
-  },
-  {
-    name: 'Cyber Industrial',
-    items: { top: 'mesh', outerwear: 'harness', bottom: 'cargo', legwear: null, footwear: 'combat', accessory: ['belt', 'choker'] },
-    colors: { mesh: 0x14131a, harness: 0x14131a, cargo: 0x2a2d34 },
-  },
-  {
-    name: 'Grunge Schoolgirl',
-    items: { top: 'bandtee', outerwear: 'jacket', bottom: 'plaid', legwear: 'stripe', footwear: 'combat', accessory: ['choker'] },
-    colors: { bandtee: 0x14131a, jacket: 0x14131a },
-  },
-  {
-    name: 'Pastel Goth',
-    items: { top: 'crop', outerwear: null, bottom: 'mini', legwear: 'fishnet', footwear: 'platform', accessory: ['ears', 'choker', 'garters'] },
-    colors: { crop: 0xff9ec7, mini: 0x5b2a86, choker: 0xff9ec7 },
-  },
-];
-
-
-__exports.PALETTE = PALETTE;
-__exports.SLOTS = SLOTS;
-__exports.ITEMS = ITEMS;
-__exports.PRESETS = PRESETS;
-};
-
-__defs['wardrobe'] = function(__exports){
-const { ITEMS, SLOTS } = __require('catalog');
-
-// Owns the equip state and the live garment meshes attached to the avatar.
-class Wardrobe {
-  constructor(avatarGroup) {
-    this.avatar = avatarGroup;
-    this.byId = Object.fromEntries(ITEMS.map((i) => [i.id, i]));
-    // slotId -> equipped item id(s). Single slots hold a string|null, multi hold a Set.
-    this.equipped = {};
-    // itemId -> { group, color } for currently mounted meshes
-    this.mounted = {};
-    // itemId -> chosen color (persists across re-equips)
-    this.colors = Object.fromEntries(ITEMS.map((i) => [i.id, i.color]));
-    SLOTS.forEach((s) => { this.equipped[s.id] = s.multi ? new Set() : null; });
-  }
-
-  isEquipped(itemId) {
-    const item = this.byId[itemId];
-    const slot = SLOTS.find((s) => s.id === item.slot);
-    return slot.multi ? this.equipped[item.slot].has(itemId) : this.equipped[item.slot] === itemId;
-  }
-
-  _mount(itemId) {
-    const item = this.byId[itemId];
-    const grp = item.build(this.colors[itemId], item.finish);
-    grp.userData.itemId = itemId;
-    this.avatar.add(grp);
-    this.mounted[itemId] = grp;
-  }
-
-  _unmount(itemId) {
-    const grp = this.mounted[itemId];
-    if (!grp) return;
-    this.avatar.remove(grp);
-    grp.traverse((o) => {
-      if (o.geometry) o.geometry.dispose();
-      if (o.material) {
-        const mats = Array.isArray(o.material) ? o.material : [o.material];
-        mats.forEach((m) => { if (m.map) m.map.dispose(); m.dispose(); });
-      }
-    });
-    delete this.mounted[itemId];
-  }
-
-  // Toggle an item on/off. Returns the resulting equipped state (bool).
-  toggle(itemId) {
-    const item = this.byId[itemId];
-    const slot = SLOTS.find((s) => s.id === item.slot);
-    if (slot.multi) {
-      const set = this.equipped[item.slot];
-      if (set.has(itemId)) { set.delete(itemId); this._unmount(itemId); return false; }
-      set.add(itemId); this._mount(itemId); return true;
-    }
-    const current = this.equipped[item.slot];
-    if (current === itemId) { this.equipped[item.slot] = null; this._unmount(itemId); return false; }
-    if (current) this._unmount(current);
-    this.equipped[item.slot] = itemId;
-    this._mount(itemId);
-    return true;
-  }
-
-  equip(itemId) { if (!this.isEquipped(itemId)) this.toggle(itemId); }
-  unequip(itemId) { if (this.isEquipped(itemId)) this.toggle(itemId); }
-
-  setColor(itemId, hex) {
-    this.colors[itemId] = hex;
-    if (this.mounted[itemId]) { // re-mount with new colour
-      this._unmount(itemId);
-      this._mount(itemId);
-    }
-  }
-
-  clearAll() {
-    Object.keys(this.mounted).forEach((id) => this._unmount(id));
-    SLOTS.forEach((s) => { this.equipped[s.id] = s.multi ? new Set() : null; });
-  }
-
-  applyPreset(preset) {
-    this.clearAll();
-    for (const [slotId, val] of Object.entries(preset.items)) {
-      if (!val) continue;
-      const ids = Array.isArray(val) ? val : [val];
-      ids.forEach((id) => {
-        if (preset.colors && preset.colors[id] != null) this.colors[id] = preset.colors[id];
-        this.equip(id);
-      });
-    }
-  }
-
-  // ---- sync: compact, serialisable snapshot of the whole look ----
-  serialize() {
-    const equipped = {};
-    for (const s of SLOTS) {
-      const v = this.equipped[s.id];
-      equipped[s.id] = s.multi ? [...v] : v;
-    }
-    return { equipped, colors: { ...this.colors } };
-  }
-
-  apply(state) {
-    if (!state) return;
-    this.clearAll();
-    if (state.colors) Object.assign(this.colors, state.colors);
-    if (state.equipped) {
-      for (const s of SLOTS) {
-        const v = state.equipped[s.id];
-        if (!v) continue;
-        (Array.isArray(v) ? v : [v]).forEach((id) => { if (this.byId[id]) this.equip(id); });
-      }
-    }
-  }
+/* ---------------- wardrobe ---------------- */
+function Wardrobe(avatar){
+  this.avatar=avatar;this.byId={};var self=this;
+  ITEMS.forEach(function(i){self.byId[i.id]=i;});
+  this.equipped={};this.mounted={};this.colors={};
+  ITEMS.forEach(function(i){self.colors[i.id]=i.color;});
+  SLOTS.forEach(function(s){self.equipped[s.id]=s.multi?{}:null;});
 }
+Wardrobe.prototype.slotOf=function(id){var it=this.byId[id];return SLOTS.filter(function(s){return s.id===it.slot;})[0];};
+Wardrobe.prototype.isEquipped=function(id){var it=this.byId[id],s=this.slotOf(id);return s.multi?!!this.equipped[it.slot][id]:this.equipped[it.slot]===id;};
+Wardrobe.prototype._mount=function(id){var it=this.byId[id];var grp=it.build(this.colors[id],it.finish);grp.userData.itemId=id;this.avatar.add(grp);this.mounted[id]=grp;};
+Wardrobe.prototype._unmount=function(id){var grp=this.mounted[id];if(!grp)return;this.avatar.remove(grp);
+  grp.traverse(function(o){if(o.geometry)o.geometry.dispose();if(o.material){var ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(function(m){if(m.map)m.map.dispose();m.dispose();});}});delete this.mounted[id];};
+Wardrobe.prototype.toggle=function(id){var it=this.byId[id],s=this.slotOf(id);
+  if(s.multi){var set=this.equipped[it.slot];if(set[id]){delete set[id];this._unmount(id);return false;}set[id]=true;this._mount(id);return true;}
+  var cur=this.equipped[it.slot];if(cur===id){this.equipped[it.slot]=null;this._unmount(id);return false;}
+  if(cur)this._unmount(cur);this.equipped[it.slot]=id;this._mount(id);return true;};
+Wardrobe.prototype.equip=function(id){if(!this.isEquipped(id))this.toggle(id);};
+Wardrobe.prototype.setColor=function(id,hex){this.colors[id]=hex;if(this.mounted[id]){this._unmount(id);this._mount(id);}};
+Wardrobe.prototype.clearAll=function(){var self=this;Object.keys(this.mounted).forEach(function(id){self._unmount(id);});SLOTS.forEach(function(s){self.equipped[s.id]=s.multi?{}:null;});};
+Wardrobe.prototype.applyPreset=function(p){this.clearAll();var self=this;
+  Object.keys(p.items).forEach(function(slotId){var val=p.items[slotId];if(!val)return;var ids=Array.isArray(val)?val:[val];
+    ids.forEach(function(id){if(p.colors&&p.colors[id]!=null)self.colors[id]=p.colors[id];self.equip(id);});});};
 
+/* ---------------- scene ---------------- */
+var canvas=document.getElementById('scene');
+var renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+// Colour management: without this, dark PBR colours read as flat grey speculars.
+renderer.outputEncoding=THREE.sRGBEncoding;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.15;
+var scene=new THREE.Scene();scene.background=new THREE.Color(0x0b0a10);scene.fog=new THREE.Fog(0x0b0a10,4.5,10);
+var camera=new THREE.PerspectiveCamera(38,1,0.1,100);camera.position.set(0,1.2,3.0);
+var controls=new THREE.OrbitControls(camera,canvas);controls.target.set(0,1.0,0);controls.enableDamping=true;controls.minDistance=1.3;controls.maxDistance=6;controls.maxPolarAngle=Math.PI*0.92;
 
-__exports.Wardrobe = Wardrobe;
-};
+// Environment map (gradient + two coloured glows) so glossy materials have
+// something to reflect — this is what makes colour + form actually read.
+function buildEnv(){
+  var c=document.createElement('canvas');c.width=512;c.height=256;var x=c.getContext('2d');
+  var g=x.createLinearGradient(0,0,0,256);g.addColorStop(0,'#4a4566');g.addColorStop(0.55,'#1a1726');g.addColorStop(1,'#070710');
+  x.fillStyle=g;x.fillRect(0,0,512,256);
+  x.globalAlpha=0.55;x.fillStyle='#ff2e88';x.beginPath();x.arc(120,140,70,0,7);x.fill();
+  x.fillStyle='#21d4fd';x.beginPath();x.arc(400,110,70,0,7);x.fill();x.globalAlpha=1;
+  var t=new THREE.CanvasTexture(c);t.mapping=THREE.EquirectangularReflectionMapping;t.encoding=THREE.sRGBEncoding;return t;
+}
+var pmrem=new THREE.PMREMGenerator(renderer);pmrem.compileEquirectangularShader();
+scene.environment=pmrem.fromEquirectangular(buildEnv()).texture;
 
-__defs['ui'] = function(__exports){
-const { ITEMS, SLOTS, PALETTE, PRESETS } = __require('catalog');
+scene.add(new THREE.HemisphereLight(0xbfb9e0,0x16121f,0.9));
+var key=new THREE.SpotLight(0xffffff,90,20,Math.PI/5,0.4,1.5);key.position.set(2.5,4.5,3.2);key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.bias=-0.0004;scene.add(key,key.target);
+var rm=new THREE.PointLight(0xff2e88,55,14,2);rm.position.set(-2.6,1.7,-1.4);scene.add(rm);
+var rc=new THREE.PointLight(0x21d4fd,48,14,2);rc.position.set(2.5,1.5,-1.9);scene.add(rc);
+var fill=new THREE.DirectionalLight(0xb9beff,0.7);fill.position.set(-1.5,2,2.5);scene.add(fill);
+var floor=new THREE.Mesh(new THREE.CircleGeometry(2.2,64),new THREE.MeshStandardMaterial({color:0x111018,roughness:0.35,metalness:0.6}));floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);
+scene.add(new THREE.PolarGridHelper(2.2,16,6,64,0x3a3550,0x201d30));
+var avatar=buildAvatar();scene.add(avatar);
+var wardrobe=new Wardrobe(avatar);
+var turntable=true;
 
-const hex = (n) => '#' + n.toString(16).padStart(6, '0');
+function shuffle(){wardrobe.clearAll();SLOTS.forEach(function(slot){var pool=ITEMS.filter(function(i){return i.slot===slot.id;});
+  if(slot.multi){pool.forEach(function(i){if(Math.random()<0.4)wardrobe.equip(i.id);});}
+  else if(Math.random()<0.85){wardrobe.equip(pool[Math.floor(Math.random()*pool.length)].id);}});}
 
-// Builds the wardrobe panel and wires it to the Wardrobe instance.
-function buildUI(wardrobe, { onShuffle, onTurntable, onShare, onChange } = {}) {
-  const panel = document.getElementById('panel');
-  let muted = false; // suppress onChange while applying a remote/shared look
-
-  // --- Presets row ---
-  const presetWrap = document.createElement('div');
-  presetWrap.className = 'presets';
-  PRESETS.forEach((p) => {
-    const b = document.createElement('button');
-    b.className = 'preset';
-    b.textContent = p.name;
-    b.onclick = () => { wardrobe.applyPreset(p); refresh(); };
-    presetWrap.appendChild(b);
+/* ---------------- UI ---------------- */
+function hex(n){return '#'+n.toString(16).padStart(6,'0');}
+var panel=document.getElementById('panel');var cards={};
+var presetWrap=document.createElement('div');presetWrap.className='presets';
+PRESETS.forEach(function(p){var b=document.createElement('button');b.className='preset';b.textContent=p.name;b.onclick=function(){wardrobe.applyPreset(p);refresh();};presetWrap.appendChild(b);});
+panel.appendChild(presetWrap);
+var actions=document.createElement('div');actions.className='actions';
+function mk(label,fn){var b=document.createElement('button');b.className='action';b.textContent=label;b.onclick=fn;return b;}
+actions.appendChild(mk('🎲 Shuffle',function(){shuffle();refresh();}));
+actions.appendChild(mk('🧹 Clear',function(){wardrobe.clearAll();refresh();}));
+var ttBtn=mk('🔄 Spin: On',function(){turntable=!turntable;ttBtn.textContent='🔄 Spin: '+(turntable?'On':'Off');});
+actions.appendChild(ttBtn);panel.appendChild(actions);
+SLOTS.forEach(function(slot){
+  var sec=document.createElement('section');var h=document.createElement('h3');h.textContent=slot.label+(slot.multi?'  (stackable)':'');sec.appendChild(h);
+  var grid=document.createElement('div');grid.className='grid';
+  ITEMS.filter(function(i){return i.slot===slot.id;}).forEach(function(item){
+    var card=document.createElement('div');card.className='card';card.dataset.id=item.id;
+    var name=document.createElement('div');name.className='name';name.textContent=item.name;
+    var tag=document.createElement('span');tag.className='tag';tag.textContent=item.tag;
+    var sw=document.createElement('div');sw.className='swatches';
+    PALETTE.forEach(function(c){var b=document.createElement('button');b.className='sw';b.style.background=hex(c.hex);b.title=c.name;
+      b.onclick=function(e){e.stopPropagation();wardrobe.setColor(item.id,c.hex);markColor(item.id,c.hex);};sw.appendChild(b);});
+    card.appendChild(name);card.appendChild(tag);card.appendChild(sw);
+    card.onclick=function(){wardrobe.toggle(item.id);refresh();};
+    grid.appendChild(card);cards[item.id]={el:card,swatches:sw};
   });
-  panel.appendChild(presetWrap);
-
-  // --- Action row ---
-  const actions = document.createElement('div');
-  actions.className = 'actions';
-  const mk = (label, fn) => { const b = document.createElement('button'); b.className = 'action'; b.textContent = label; b.onclick = fn; return b; };
-  actions.appendChild(mk('🎲 Shuffle', () => { onShuffle?.(); refresh(); }));
-  actions.appendChild(mk('🧹 Clear', () => { wardrobe.clearAll(); refresh(); }));
-  const ttBtn = mk('🔄 Turntable: On', function () {
-    const on = onTurntable?.();
-    this.textContent = '🔄 Turntable: ' + (on ? 'On' : 'Off');
-  });
-  actions.appendChild(ttBtn);
-  if (onShare) {
-    const shareBtn = mk('📤 Share look', async function () {
-      const res = await onShare();
-      if (res === 'copied') { const t = this.textContent; this.textContent = '✓ Link copied'; setTimeout(() => { this.textContent = t; }, 1500); }
-    });
-    actions.appendChild(shareBtn);
-  }
-  panel.appendChild(actions);
-
-  // --- Slot groups (the "swarm" of clothing) ---
-  const cards = {}; // itemId -> { el, swatches }
-  SLOTS.forEach((slot) => {
-    const section = document.createElement('section');
-    const h = document.createElement('h3');
-    h.textContent = slot.label + (slot.multi ? '  (stackable)' : '');
-    section.appendChild(h);
-
-    const grid = document.createElement('div');
-    grid.className = 'grid';
-    ITEMS.filter((i) => i.slot === slot.id).forEach((item) => {
-      const card = document.createElement('div');
-      card.className = 'card';
-      card.dataset.id = item.id;
-
-      const name = document.createElement('div');
-      name.className = 'name';
-      name.textContent = item.name;
-
-      const tag = document.createElement('span');
-      tag.className = 'tag';
-      tag.textContent = item.tag;
-
-      const swatches = document.createElement('div');
-      swatches.className = 'swatches';
-      PALETTE.forEach((c) => {
-        const sw = document.createElement('button');
-        sw.className = 'sw';
-        sw.style.background = hex(c.hex);
-        sw.title = c.name;
-        sw.onclick = (e) => { e.stopPropagation(); wardrobe.setColor(item.id, c.hex); refresh(); };
-        swatches.appendChild(sw);
-      });
-
-      card.appendChild(name);
-      card.appendChild(tag);
-      card.appendChild(swatches);
-      card.onclick = () => { wardrobe.toggle(item.id); refresh(); };
-
-      grid.appendChild(card);
-      cards[item.id] = { el: card, swatches };
-    });
-
-    section.appendChild(grid);
-    panel.appendChild(section);
-  });
-
-  function markColor(itemId, h) {
-    const { swatches } = cards[itemId];
-    [...swatches.children].forEach((sw, idx) => {
-      sw.classList.toggle('active', PALETTE[idx].hex === h);
-    });
-  }
-
-  function refresh() {
-    ITEMS.forEach((item) => {
-      const on = wardrobe.isEquipped(item.id);
-      cards[item.id].el.classList.toggle('equipped', on);
-      markColor(item.id, wardrobe.colors[item.id]);
-    });
-    updateCount();
-    if (!muted) onChange?.();
-  }
-
-  // apply a look received from a shared link / another device without echoing it back
-  function applyRemote(state) {
-    muted = true;
-    wardrobe.apply(state);
-    refresh();
-    muted = false;
-  }
-
-  const count = document.getElementById('count');
-  function updateCount() {
-    const n = Object.keys(wardrobe.mounted).length;
-    count.textContent = `${ITEMS.length} pieces · ${n} worn`;
-  }
-
-  refresh();
-  return { refresh, applyRemote };
-}
-
-
-__exports.buildUI = buildUI;
-};
-
-__defs['sync'] = function(__exports){
-// Live + shareable outfit sync.
-//
-// Every transport is feature-detected, so this module is completely inert in a
-// non-browser context (e.g. the smoke test) and degrades gracefully wherever a
-// given capability is missing.
-//
-// Transports, in order of "no setup -> more setup":
-//   1. URL hash      — the whole look encodes into #look=..., so any link is a
-//                      deep link. Powers "Share look" (native share sheet).
-//   2. localStorage + BroadcastChannel — live sync across tabs/windows on the
-//                      same device.
-//   3. WebSocket room — optional true cross-device live sync. Activated by
-//                      setting window.__SYNC_WS (relay url) and window.__SYNC_ROOM.
-
-const KEY = 'cryptcouture:look';
-const g = typeof globalThis !== 'undefined' ? globalThis : {};
-
-const b64 = {
-  enc: (state) => btoa(unescape(encodeURIComponent(JSON.stringify(state)))),
-  dec: (str) => { try { return JSON.parse(decodeURIComponent(escape(atob(str)))); } catch { return null; } },
-};
-
-function createSync({ onRemote } = {}) {
-  const loc = g.location;
-  const ls = (() => { try { return g.localStorage; } catch { return null; } })();
-  const wsUrl = g.__SYNC_WS;
-  const room = g.__SYNC_ROOM || 'crypt';
-  let bc = null, ws = null, last = '';
-
-  const emit = (code) => { if (code && code !== last) { last = code; const s = b64.dec(code); if (s) onRemote?.(s); } };
-
-  // 1) restore from a shared/deep link on load
-  if (loc && loc.hash && loc.hash.includes('look=')) {
-    const m = loc.hash.match(/look=([^&]+)/);
-    if (m) emit(m[1]);
-  }
-
-  // 2) same-device live across tabs
-  if (ls && g.addEventListener) {
-    g.addEventListener('storage', (e) => { if (e.key === KEY && e.newValue) emit(e.newValue); });
-  }
-  if (typeof g.BroadcastChannel === 'function') {
-    try { bc = new g.BroadcastChannel(KEY); bc.onmessage = (e) => emit(e.data); } catch { /* ignore */ }
-  }
-
-  // 3) optional cross-device live relay
-  function connectWS() {
-    if (!wsUrl || typeof g.WebSocket !== 'function') return;
-    try {
-      ws = new g.WebSocket(wsUrl);
-      ws.onmessage = (e) => { try { const msg = JSON.parse(e.data); if (msg.room === room) emit(msg.code); } catch { /* ignore */ } };
-      ws.onclose = () => setTimeout(connectWS, 2000);
-    } catch { /* ignore */ }
-  }
-  connectWS();
-
-  function push(state) {
-    const code = b64.enc(state);
-    last = code;
-    if (loc && g.history?.replaceState) { try { g.history.replaceState(null, '', '#look=' + code); } catch { /* ignore */ } }
-    if (ls) { try { ls.setItem(KEY, code); } catch { /* ignore */ } }
-    if (bc) { try { bc.postMessage(code); } catch { /* ignore */ } }
-    if (ws && ws.readyState === 1) { try { ws.send(JSON.stringify({ room, code })); } catch { /* ignore */ } }
-  }
-
-  function shareUrl() {
-    if (!loc) return '';
-    return loc.origin + loc.pathname + loc.search + loc.hash;
-  }
-
-  async function share(state) {
-    if (state) push(state);
-    const url = shareUrl();
-    const nav = g.navigator;
-    if (nav?.share) { try { await nav.share({ title: 'Crypt Couture look', url }); return 'shared'; } catch { return 'cancelled'; } }
-    if (nav?.clipboard?.writeText) { try { await nav.clipboard.writeText(url); return 'copied'; } catch { /* ignore */ } }
-    return url;
-  }
-
-  return { push, share, shareUrl, room, live: !!wsUrl };
-}
-
-
-__exports.createSync = createSync;
-};
-
-// ---- entry ----
-const { buildAvatar } = __require('avatar');
-const { Wardrobe } = __require('wardrobe');
-const { buildUI } = __require('ui');
-const { ITEMS, SLOTS } = __require('catalog');
-const { createSync } = __require('sync');
-
-// ---- Renderer / scene / camera ---------------------------------------------
-const canvas = document.getElementById('scene');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.15;
-
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0b0a10);
-scene.fog = new THREE.Fog(0x0b0a10, 4.5, 10);
-
-// Environment map so glossy goth materials have something to reflect.
-function buildEnv() {
-  const c = document.createElement('canvas');
-  c.width = 512; c.height = 256;
-  const x = c.getContext('2d');
-  const g = x.createLinearGradient(0, 0, 0, 256);
-  g.addColorStop(0, '#4a4566'); g.addColorStop(0.55, '#1a1726'); g.addColorStop(1, '#070710');
-  x.fillStyle = g; x.fillRect(0, 0, 512, 256);
-  x.globalAlpha = 0.55;
-  x.fillStyle = '#ff2e88'; x.beginPath(); x.arc(120, 140, 70, 0, 7); x.fill();
-  x.fillStyle = '#21d4fd'; x.beginPath(); x.arc(400, 110, 70, 0, 7); x.fill();
-  x.globalAlpha = 1;
-  const t = new THREE.CanvasTexture(c);
-  t.mapping = THREE.EquirectangularReflectionMapping;
-  t.colorSpace = THREE.SRGBColorSpace;
-  return t;
-}
-const pmrem = new THREE.PMREMGenerator(renderer);
-scene.environment = pmrem.fromEquirectangular(buildEnv()).texture;
-
-const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
-camera.position.set(0, 1.2, 3.0);
-
-const controls = new OrbitControls(camera, canvas);
-controls.target.set(0, 1.0, 0);
-controls.enableDamping = true;
-controls.minDistance = 1.3;
-controls.maxDistance = 6;
-controls.maxPolarAngle = Math.PI * 0.92;
-
-// ---- Lighting: dark studio with magenta / cyan rim lights ------------------
-scene.add(new THREE.HemisphereLight(0xbfb9e0, 0x16121f, 0.9));
-
-const key = new THREE.SpotLight(0xffffff, 90, 20, Math.PI / 5, 0.4, 1.5);
-key.position.set(2.5, 4.5, 3.2);
-key.castShadow = true;
-key.shadow.mapSize.set(2048, 2048);
-key.shadow.bias = -0.0004;
-scene.add(key, key.target);
-
-const rimMagenta = new THREE.PointLight(0xff2e88, 55, 14, 2);
-rimMagenta.position.set(-2.6, 1.7, -1.4);
-scene.add(rimMagenta);
-
-const rimCyan = new THREE.PointLight(0x21d4fd, 48, 14, 2);
-rimCyan.position.set(2.5, 1.5, -1.9);
-scene.add(rimCyan);
-
-const fill = new THREE.DirectionalLight(0xb9beff, 0.7);
-fill.position.set(-1.5, 2, 2.5);
-scene.add(fill);
-
-// ---- Floor (reflective-looking disc + grid) --------------------------------
-const floor = new THREE.Mesh(
-  new THREE.CircleGeometry(2.2, 64),
-  new THREE.MeshStandardMaterial({ color: 0x111018, roughness: 0.35, metalness: 0.6 })
-);
-floor.rotation.x = -Math.PI / 2;
-floor.receiveShadow = true;
-scene.add(floor);
-
-const grid = new THREE.PolarGridHelper(2.2, 16, 6, 64, 0x3a3550, 0x201d30);
-grid.position.y = 0.001;
-scene.add(grid);
-
-// ---- Avatar + wardrobe ------------------------------------------------------
-const avatar = buildAvatar();
-scene.add(avatar);
-
-const wardrobe = new Wardrobe(avatar);
-
-// ---- UI hooks ---------------------------------------------------------------
-let turntable = true;
-
-function shuffle() {
-  wardrobe.clearAll();
-  SLOTS.forEach((slot) => {
-    const pool = ITEMS.filter((i) => i.slot === slot.id);
-    if (slot.multi) {
-      pool.forEach((i) => { if (Math.random() < 0.4) pick(i); });
-    } else if (Math.random() < 0.85) {
-      pick(pool[Math.floor(Math.random() * pool.length)]);
-    }
-  });
-  function pick(item) {
-    // random colour from the catalog palette occasionally
-    wardrobe.equip(item.id);
-  }
-}
-
-let sync = null;
-const ui = buildUI(wardrobe, {
-  onShuffle: shuffle,
-  onTurntable: () => { turntable = !turntable; return turntable; },
-  onShare: () => sync?.share(wardrobe.serialize()),
-  onChange: () => sync?.push(wardrobe.serialize()),
+  sec.appendChild(grid);panel.appendChild(sec);
 });
+function markColor(id,h){var sw=cards[id].swatches;[].forEach.call(sw.children,function(b,idx){b.classList.toggle('active',PALETTE[idx].hex===h);});}
+var countEl=document.getElementById('count');
+function refresh(){ITEMS.forEach(function(item){cards[item.id].el.classList.toggle('equipped',wardrobe.isEquipped(item.id));markColor(item.id,wardrobe.colors[item.id]);});
+  countEl.textContent=ITEMS.length+' pieces · '+Object.keys(wardrobe.mounted).length+' worn';}
 
-// Start on a vivid, textured look so colour + texture read immediately.
-Object.assign(wardrobe.colors, { corset: 0xc01f7b, platform: 0x5b2a86, choker: 0xff9ec7, ears: 0x2a1430 });
-['corset', 'plaid', 'stripe', 'platform', 'choker', 'ears'].forEach((id) => wardrobe.equip(id));
-ui.refresh();
+// Vivid, textured starting look: magenta corset + plaid skirt + striped tights
+// + violet platforms + pink choker + cat ears — shows colour AND texture at a glance.
+wardrobe.colors.corset=0xc01f7b;wardrobe.colors.platform=0x5b2a86;wardrobe.colors.choker=0xff9ec7;wardrobe.colors.ears=0x2a1430;
+['corset','plaid','stripe','platform','choker','ears'].forEach(function(id){wardrobe.equip(id);});
+refresh();
 
-// Live + shareable sync: a shared #look=... link (or another device) overrides
-// the default look; local changes broadcast outward.
-sync = createSync({ onRemote: (state) => ui.applyRemote(state) });
-
-// Installable PWA (only on a real http(s) origin; harmless no-op elsewhere).
-if (typeof navigator !== 'undefined' && navigator.serviceWorker &&
-    typeof location !== 'undefined' && location.protocol.startsWith('http')) {
-  navigator.serviceWorker.register('./sw.js').catch(() => {});
+/* ---------------- loop ---------------- */
+function resize(){var w=canvas.clientWidth,h=canvas.clientHeight;if(canvas.width!==w||canvas.height!==h){renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}}
+var clock=new THREE.Clock();
+(function tick(){var dt=clock.getDelta();if(turntable)avatar.rotation.y+=dt*0.35;resize();controls.update();renderer.render(scene,camera);requestAnimationFrame(tick);})();
 }
-
-// ---- Resize + render loop ---------------------------------------------------
-function resize() {
-  const w = canvas.clientWidth, h = canvas.clientHeight;
-  if (canvas.width !== w || canvas.height !== h) {
-    renderer.setSize(w, h, false);
-    camera.aspect = w / h;
-    camera.updateProjectionMatrix();
-  }
-}
-
-const clock = new THREE.Clock();
-function tick() {
-  const dt = clock.getDelta();
-  if (turntable) avatar.rotation.y += dt * 0.35;
-  resize();
-  controls.update();
-  renderer.render(scene, camera);
-  requestAnimationFrame(tick);
-}
-tick();
-
-
 </script>
 </body>
 </html>
