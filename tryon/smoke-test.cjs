@@ -1,15 +1,16 @@
-// Executes the generated standalone.html bundle with mocked THREE + DOM to catch
-// transform/wiring bugs (missing exports, broken module graph) without a browser.
-// Run after build:  node tryon/build-standalone.js && node tryon/smoke-test.cjs
-const fs = require('fs');
-const path = require('path');
-const file = path.join(__dirname, '..', 'standalone.html');
-let h = fs.readFileSync(file, 'utf8');
-let src = h.match(/<script type="module">([\s\S]*?)<\/script>/)[1];
+// Executes the real modular source (tryon/src/*.js) with mocked THREE + DOM to
+// catch wiring bugs (missing exports, broken module graph, builders that throw)
+// without a browser. It bundles via build-standalone.js's buildBundle(), so the
+// test tracks exactly what ships — no dependency on any generated HTML file.
+// Run:  node tryon/smoke-test.cjs
+const { buildBundle } = require('./build-standalone.js');
 
+let src = buildBundle();
+// Strip the two external module imports; THREE/OrbitControls are injected below.
 src = src.replace(/^\s*import \* as THREE from 'three';\s*$/m, '');
 src = src.replace(/^\s*import \{ OrbitControls \} from 'three\/addons\/[^']*';\s*$/m, '');
 
+// A recursive proxy that absorbs any THREE/DOM call, property, or construction.
 function rp() {
   const f = function () { return rp(); };
   return new Proxy(f, {
@@ -33,6 +34,7 @@ const requestAnimationFrame = () => 0;
 const cancelAnimationFrame = () => 0;
 const performance = { now: () => 0 };
 
+// After the entry (main) runs, exercise every builder + the wardrobe lifecycle.
 const epilogue = `
 ;(function(){
   const cat = __require('catalog');
@@ -45,20 +47,30 @@ const epilogue = `
   });
   if (typeof __require('avatar').buildAvatar !== 'function') throw new Error('buildAvatar missing');
   __require('avatar').buildAvatar();
-  if (typeof __require('wardrobe').Wardrobe !== 'function') throw new Error('Wardrobe missing');
+  const W = __require('wardrobe').Wardrobe;
+  if (typeof W !== 'function') throw new Error('Wardrobe missing');
+  // lifecycle: equip every item then clear, exercising _mount/_unmount/dispose
+  const wr = new W(rp());
+  cat.ITEMS.forEach((it) => wr.equip(it.id));
+  wr.clearAll();
   if (typeof __require('ui').buildUI !== 'function') throw new Error('buildUI missing');
-  console.log('SMOKE OK — '+n+' garment builders + avatar executed cleanly');
+  console.log('SMOKE OK — '+n+' garment builders + avatar + wardrobe lifecycle executed cleanly');
 })();
 `;
 
 try {
+  // `rp()` inside the epilogue needs the proxy factory in scope, so run it all
+  // in one Function with rp passed in.
   const fn = new Function(
-    'THREE', 'OrbitControls', 'document', 'window',
+    'rp', 'THREE', 'OrbitControls', 'document', 'window',
     'requestAnimationFrame', 'cancelAnimationFrame', 'performance', 'console',
     src + epilogue
   );
-  fn(THREE, OrbitControls, document, window, requestAnimationFrame, cancelAnimationFrame, performance, console);
+  fn(rp, THREE, OrbitControls, document, window, requestAnimationFrame, cancelAnimationFrame, performance, console);
 } catch (e) {
   console.error('SMOKE FAILED:', e.message);
   process.exit(1);
 }
+// main.js's createSync opens a BroadcastChannel that keeps Node's event loop
+// alive; the test work is done, so exit cleanly rather than hang.
+process.exit(0);

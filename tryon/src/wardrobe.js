@@ -37,7 +37,13 @@ export class Wardrobe {
       if (o.geometry) o.geometry.dispose();
       if (o.material) {
         const mats = Array.isArray(o.material) ? o.material : [o.material];
-        mats.forEach((m) => { if (m.map) m.map.dispose(); m.dispose(); });
+        mats.forEach((m) => {
+          // Dispose per-instance maps (plaid/stripe/fishnet built fresh each mount).
+          // bumpMaps are shared from materials.js's _grainCache — never dispose those.
+          if (m.map) m.map.dispose();
+          if (m.alphaMap) m.alphaMap.dispose();
+          m.dispose();
+        });
       }
     });
     delete this.mounted[itemId];

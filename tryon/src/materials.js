@@ -2,13 +2,16 @@ import * as THREE from 'three';
 
 // ---- Procedural textures (no external files needed) -------------------------
 
-// A fishnet / mesh pattern drawn to a canvas, tiled. Transparent gaps.
-export function makeFishnetTexture(color = '#0a0a0a', scale = 16) {
+// A fishnet / mesh lattice as an ALPHA mask: opaque white threads on black, so
+// it can drive a material's alphaMap (white = thread shows, black = open gap).
+// The thread colour comes from the material's own `color`, not this texture.
+export function makeFishnetTexture(scale = 16) {
   const c = document.createElement('canvas');
   c.width = c.height = 64;
   const ctx = c.getContext('2d');
-  ctx.clearRect(0, 0, 64, 64);
-  ctx.strokeStyle = color;
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, 64, 64);
+  ctx.strokeStyle = '#fff';
   ctx.lineWidth = 5;
   // diagonal lattice
   for (let i = -64; i < 128; i += 22) {

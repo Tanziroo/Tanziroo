@@ -406,8 +406,8 @@ export function cargoPants(color, finish = 'matte') {
 
 export function fishnets(color, finish = 'mesh') {
   const g = group('fishnets');
-  const tex = makeFishnetTexture('#0a0a0a', 10);
-  const mat = new THREE.MeshStandardMaterial({ map: tex, transparent: true, alphaMap: tex, roughness: 0.7, side: DBL, color });
+  const tex = makeFishnetTexture(10);
+  const mat = new THREE.MeshStandardMaterial({ alphaMap: tex, transparent: true, roughness: 0.7, side: DBL, color });
   [-1, 1].forEach((s) => g.add(legTube(s, mat, { pad: 0.006, topY: P.hipY - 0.02, botY: P.ankleY - 0.01 })));
   return g;
 }

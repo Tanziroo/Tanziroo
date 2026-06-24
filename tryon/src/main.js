@@ -135,6 +135,7 @@ if (typeof navigator !== 'undefined' && navigator.serviceWorker &&
 // ---- Resize + render loop ---------------------------------------------------
 function resize() {
   const w = canvas.clientWidth, h = canvas.clientHeight;
+  if (w === 0 || h === 0) return; // pre-layout frame: skip to avoid NaN aspect
   if (canvas.width !== w || canvas.height !== h) {
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
