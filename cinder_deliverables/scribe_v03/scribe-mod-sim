@@ -1,0 +1,102 @@
+#!/usr/bin/env python3
+"""scribe-mod-sim — sample simulation executor for scribe v0.3+.
+
+Reads scribe-plan.json from stdin, computes a projected backup outcome,
+emits a sim_version: 1 JSON document on stdout. scribe v0.3 renders it
+as a colored visual panel (projected bars + action badges + fit gauge);
+older scribe falls back to text mode automatically.
+
+Usage with scribe:
+    scribe /mnt/sys --executor /path/to/scribe-mod-sim
+
+Set the destination by editing DEST_DEFAULT below or via env:
+    SCRIBE_DEST=/mnt/backup/wherever scribe ... --executor scribe-mod-sim
+
+Standard library only — no pip install needed.
+"""
+import json
+import os
+import sys
+from collections import defaultdict
+
+DEST_DEFAULT = "/mnt/backup/KHETPRIME-rescue"
+SUSTAINED_MBPS = 50  # pessimistic throughput estimate for ETA
+
+
+def free_bytes(path: str) -> int:
+    """Free bytes at path. If path doesn't exist, walk up to the nearest
+    parent that does (so a destination that's about to be created is still
+    meaningfully measured against its mount's free space)."""
+    p = path
+    while p and not os.path.exists(p):
+        p = os.path.dirname(p) or "/"
+    try:
+        s = os.statvfs(p)
+        return s.f_bavail * s.f_frsize
+    except OSError:
+        return 0
+
+
+def eta_seconds(bytes_to_copy: int) -> int:
+    return max(1, bytes_to_copy // (SUSTAINED_MBPS * 1024 * 1024))
+
+
+def main() -> int:
+    try:
+        plan = json.load(sys.stdin)
+    except json.JSONDecodeError as e:
+        # Plain text fallback — scribe will show it as raw output.
+        sys.stdout.write(f"sim-mod: could not parse plan JSON ({e})\n")
+        return 1
+
+    dest = os.environ.get("SCRIBE_DEST", DEST_DEFAULT)
+    free = free_bytes(dest)
+    files = plan.get("files", [])
+
+    # Group rows by top-level path component for the visual.
+    by_group: dict[str, int] = defaultdict(int)
+    for f in files:
+        top = (f.get("path") or "").split("/", 1)[0] or "(root)"
+        by_group[top] += int(f.get("bytes", 0))
+
+    # Simple dedup: same basename + same size → assumed redundant copy.
+    seen: dict[tuple[str, int], str] = {}
+    skip_bytes = 0
+    copy_bytes = 0
+    for f in files:
+        key = (os.path.basename(f.get("path") or ""), int(f.get("bytes", 0)))
+        if key in seen:
+            skip_bytes += key[1]
+        else:
+            seen[key] = f.get("path") or ""
+            copy_bytes += key[1]
+
+    fits = copy_bytes <= free if free else False
+
+    rows = [
+        {"key": k, "bytes": b, "action": "COPY"}
+        for k, b in sorted(by_group.items(), key=lambda x: -x[1])
+    ]
+    if skip_bytes > 0:
+        rows.append({"key": "(dedup)", "bytes": skip_bytes, "action": "SKIP"})
+
+    result = {
+        "sim_version": 1,
+        "dest": dest,
+        "dest_free_bytes": free,
+        "fits": fits,
+        "eta_seconds": eta_seconds(copy_bytes),
+        "totals": {
+            "copy_bytes": copy_bytes,
+            "skip_bytes": skip_bytes,
+            "conflicts": 0,
+        },
+        "rows": rows,
+    }
+    json.dump(result, sys.stdout, indent=2)
+    sys.stdout.write("\n")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
