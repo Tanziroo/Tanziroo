@@ -846,3 +846,120 @@ fn main() -> io::Result<()> {
     res
 }
 
+
+// ───────────────────────── snapshot tests ───────────────────────────────────
+//
+// These render real frames into an in-memory TestBackend buffer and assert on
+// the actual cells. That means the TUI's *visual* layout is verifiable without
+// a physical terminal — run `cargo test -- --nocapture` to print the frames as
+// text and eyeball them, or just `cargo test` to gate on the assertions.
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ratatui::backend::TestBackend;
+    use ratatui::Terminal;
+
+    fn demo_app() -> App {
+        let folders = vec![
+            Row { key: "images".into(),          size: 12_000_000, count: 1 },
+            Row { key: "medical_backups".into(), size: 11_000_000, count: 2 },
+            Row { key: "backup/2025".into(),     size: 3_000_000,  count: 1 },
+            Row { key: "home/khet".into(),       size: 2_000_000,  count: 2 },
+            Row { key: "forensics".into(),       size: 200_000,    count: 1 },
+        ];
+        let total = folders.iter().map(|r| r.size).sum();
+        let mut state = ListState::default();
+        state.select(Some(0));
+        let mut app = App {
+            cfg: Config {
+                root: PathBuf::from("/mnt/sys"),
+                areas: vec![],
+                depth: 2,
+                executor: Some("./scribe-mod-sim".into()),
+                executor_timeout: Duration::from_secs(60),
+            },
+            files: vec![],
+            total_bytes: total,
+            folders,
+            exts: vec![],
+            view: View::Folders,
+            state,
+            sel_folders: HashSet::new(),
+            sel_exts: HashSet::new(),
+            status: String::new(),
+            status_kind: StatusKind::Help,
+            popup: None,
+        };
+        app.sel_folders.insert("medical_backups".into());
+        app
+    }
+
+    /// Dump a rendered frame as text so a human (or model) can read the layout.
+    fn render_to_text(app: &mut App, w: u16, h: u16) -> String {
+        let backend = TestBackend::new(w, h);
+        let mut terminal = Terminal::new(backend).unwrap();
+        terminal.draw(|f| ui(f, app)).unwrap();
+        let buf = terminal.backend().buffer().clone();
+        let mut out = String::new();
+        for y in 0..buf.area.height {
+            for x in 0..buf.area.width {
+                out.push_str(buf[(x, y)].symbol());
+            }
+            out.push('\n');
+        }
+        out
+    }
+
+    #[test]
+    fn main_view_renders_expected_elements() {
+        let mut app = demo_app();
+        let text = render_to_text(&mut app, 90, 24);
+        println!("\n===== MAIN VIEW (90x24) =====\n{text}");
+        assert!(text.contains("scribe 0.3.0"), "header/version missing");
+        assert!(text.contains("Folders"),      "tab bar missing");
+        assert!(text.contains("images"),       "top folder row missing");
+        assert!(text.contains("◉"),            "selected mark missing");
+        assert!(text.contains("○"),            "unselected mark missing");
+        assert!(text.contains("█"),            "heatmap bar missing");
+        assert!(text.contains("selected"),     "selection gauge label missing");
+    }
+
+    #[test]
+    fn sim_popup_renders_badges_and_gauge() {
+        let mut app = demo_app();
+        app.popup = Some(Popup::Sim {
+            result: SimResult {
+                sim_version: 1,
+                dest: "/mnt/backup/rescue".into(),
+                dest_free_bytes: 62_000_000_000,
+                fits: true,
+                eta_seconds: 420,
+                totals: SimTotals { copy_bytes: 15_000_000_000, skip_bytes: 250_000_000, conflicts: 0 },
+                rows: vec![
+                    SimRow { key: "medical_backups".into(), bytes: 8_700_000_000, action: "COPY".into() },
+                    SimRow { key: "backup".into(),          bytes: 7_200_000_000, action: "COPY".into() },
+                    SimRow { key: "(dedup)".into(),         bytes: 250_000_000,   action: "SKIP".into() },
+                ],
+            },
+            raw: String::new(),
+            raw_view: false,
+        });
+        let text = render_to_text(&mut app, 90, 28);
+        println!("\n===== SIM POPUP (90x28) =====\n{text}");
+        assert!(text.contains("projected outcome"), "sim title missing");
+        assert!(text.contains("COPY"),  "COPY badge missing");
+        assert!(text.contains("SKIP"),  "SKIP badge missing");
+        assert!(text.contains("FITS"),  "fit gauge label missing");
+        assert!(text.contains("/mnt/backup/rescue"), "dest header missing");
+    }
+
+    #[test]
+    fn empty_selection_is_safe() {
+        let mut app = demo_app();
+        app.sel_folders.clear();
+        let (bytes, n) = app.selected_summary();
+        assert_eq!((bytes, n), (0, 0));
+        // build_plan_json must not panic on empty selection
+        let _ = app.build_plan_json();
+    }
+}
