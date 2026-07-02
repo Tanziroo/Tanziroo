@@ -163,9 +163,14 @@ fn classify(entropy: f32, zero_frac: f32, print_frac: f32, sig: &str) -> Texture
     // Order matters — most specific first.
     if zero_frac > 0.90 && entropy < 0.5 { return Texture::Zeroed; }
     if print_frac > 0.85 && entropy < 6.0 { return Texture::Text; }
+    // Signature/entropy contradiction: a media header on a flat-high body is
+    // data-within-data (packed/encrypted payload or heavy stego). Classify it
+    // Anomalous so it stands apart from ordinary encrypted containers — both in
+    // the findings AND as its own color in the visual grid.
+    let media = matches!(sig, "jpeg" | "png" | "gif" | "pdf");
+    if media && entropy >= 7.5 { return Texture::Anomalous; }
     if entropy >= 7.90 {
-        // Flat-high: candidate encrypted/compressed. A real media header on a
-        // flat-high body is a contradiction we flag later as an anomaly.
+        // Flat-high: candidate encrypted/compressed container.
         return Texture::FlatHigh;
     }
     if entropy >= 6.5 { return Texture::MixedFiles; }
