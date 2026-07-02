@@ -72,7 +72,16 @@ struct Layer {
     mean_entropy: f32,
     aligned_512: bool,
     aligned_4k: bool,
+    aligned_64k: bool,
+    aligned_1m: bool,
     confidence: &'static str, // low | moderate | notable
+    // Spatial shape — survives encryption because it is metadata ABOUT the
+    // ciphertext's position, not IN the ciphertext. "You can encrypt the bytes,
+    // not the offset."
+    before: &'static str,   // texture immediately preceding this region
+    after: &'static str,    // texture immediately following
+    placement: &'static str,// isolated_in_free_space | abuts_filesystem | drive_tail | drive_head | adjacent_layer
+    round_size: bool,       // length is a round power-of-two-ish container size
 }
 
 #[derive(Serialize)]
@@ -185,9 +194,41 @@ fn derive_findings(cells: &[SurfaceCell], block_size: u64) -> Findings {
             if run >= min_run {
                 let start_off = cells[start].offset;
                 let end_off = cells[i - 1].offset + cells[i - 1].len;
-                let conf = if run >= min_run * 4 { "notable" }
-                           else if run >= min_run * 2 { "moderate" }
-                           else { "low" };
+                // Spatial context: what sits on either side, and where in the drive.
+                let tex_name = |t: Texture| -> &'static str { match t {
+                    Texture::Zeroed => "zeroed", Texture::Text => "text",
+                    Texture::StructuredFs => "structured_fs", Texture::MixedFiles => "mixed_files",
+                    Texture::FlatHigh => "flat_high", Texture::Anomalous => "anomalous",
+                    Texture::Empty => "empty",
+                }};
+                let before = if start == 0 { "drive_start" } else { tex_name(cells[start - 1].texture) };
+                let after  = if i >= cells.len() { "drive_end" } else { tex_name(cells[i].texture) };
+                // Placement classification — the location IS a shape.
+                let total_blocks = cells.len() as u64;
+                let at_tail = (i as u64) >= total_blocks.saturating_sub(2);
+                let at_head = start <= 1;
+                let placement = if before == "zeroed" && (after == "zeroed" || after == "drive_end") {
+                    "isolated_in_free_space"   // classic hidden-data-in-unallocated shape
+                } else if before == "flat_high" || after == "flat_high" {
+                    "adjacent_layer"
+                } else if at_tail {
+                    "drive_tail"               // classic hidden-volume placement
+                } else if at_head {
+                    "drive_head"
+                } else if before.contains("fs") || after.contains("fs") || before == "mixed_files" || after == "mixed_files" {
+                    "abuts_filesystem"
+                } else { "interior" };
+                let len = end_off - start_off;
+                let round_size = len.is_power_of_two()
+                    || len % (64 * 1024 * 1024) == 0
+                    || len % (1024 * 1024 * 1024) == 0;
+                // Confidence now weighs spatial shape, not entropy alone.
+                let mut score = 0u32;
+                if run >= min_run * 4 { score += 2; } else if run >= min_run * 2 { score += 1; }
+                if placement == "isolated_in_free_space" || placement == "drive_tail" { score += 2; }
+                if start_off % (1024 * 1024) == 0 { score += 1; }
+                if round_size { score += 1; }
+                let conf = if score >= 4 { "notable" } else if score >= 2 { "moderate" } else { "low" };
                 layers.push(Layer {
                     kind: "high-entropy region (candidate encrypted/compressed container)",
                     start_offset: start_off,
@@ -196,7 +237,10 @@ fn derive_findings(cells: &[SurfaceCell], block_size: u64) -> Findings {
                     mean_entropy: sum / run as f32,
                     aligned_512: start_off % 512 == 0,
                     aligned_4k: start_off % 4096 == 0,
+                    aligned_64k: start_off % (64 * 1024) == 0,
+                    aligned_1m: start_off % (1024 * 1024) == 0,
                     confidence: conf,
+                    before, after, placement, round_size,
                 });
             }
         } else {
@@ -241,9 +285,13 @@ fn derive_findings(cells: &[SurfaceCell], block_size: u64) -> Findings {
         boundaries,
         anomalies,
         caveat: "LEADS, not proof. Every value is a reproducible statistic derived read-only. \
-                 Strong deniable encryption (e.g. VeraCrypt hidden volumes) is engineered to be \
-                 statistically indistinguishable from random free space; absence of a flag is NOT \
-                 absence of a hidden volume. Confirm any lead with a focused carve and an examiner.",
+                 Note: strong encryption flattens CONTENT to ~8.0 bits so the bytes are opaque — \
+                 but PLACEMENT, GEOMETRY, and CONTEXT are metadata about where the ciphertext sits, \
+                 not inside it, and remain observable evidence (you can encrypt the bytes, not the \
+                 offset). Deniable schemes (e.g. VeraCrypt hidden volumes) defeat content analysis \
+                 by design, so absence of a content flag is NOT absence of a hidden volume — but \
+                 their required placement (in an outer volume's free space, aligned, sized) is \
+                 itself a shape worth noting. Confirm any lead with a focused carve and an examiner.",
     }
 }
 
@@ -317,10 +365,18 @@ fn print_summary(f: &SurfaceField) {
     let fd = &f.findings;
     println!("\nLAYERS (candidate encrypted/compressed containers): {}", fd.layered_high_entropy_regions);
     for (n, l) in fd.layers.iter().enumerate() {
-        println!("  #{:<2} {}..{}  ({} blocks, mean H={:.3}, {}{}, {})",
-            n + 1, human(l.start_offset), human(l.end_offset), l.blocks, l.mean_entropy,
-            if l.aligned_4k { "4K-aligned" } else if l.aligned_512 { "512-aligned" } else { "unaligned" },
-            "", l.confidence);
+        let align = if l.aligned_1m { "1M-aligned" } else if l.aligned_64k { "64K-aligned" }
+                    else if l.aligned_4k { "4K-aligned" } else if l.aligned_512 { "512-aligned" } else { "unaligned" };
+        println!("  #{:<2} {}..{}  ({} blocks, mean H={:.3})", n + 1, human(l.start_offset), human(l.end_offset), l.blocks, l.mean_entropy);
+        println!("      shape: [{}] <{}> [{}]  ·  {}  ·  {}{}  ·  confidence: {}",
+            l.before, l.placement, l.after, align,
+            human(l.end_offset - l.start_offset), if l.round_size { " (round size)" } else { "" },
+            l.confidence);
+        if l.placement == "isolated_in_free_space" {
+            println!("      ^ HIGH-ENTROPY ISLAND IN ZEROED FREE SPACE — hidden-data-in-unallocated shape.");
+        } else if l.placement == "drive_tail" {
+            println!("      ^ positioned at drive tail — classic hidden-volume placement.");
+        }
     }
     println!("\nBOUNDARIES (aligned texture transitions): {}", fd.boundaries.len());
     if !fd.boundaries.is_empty() {
