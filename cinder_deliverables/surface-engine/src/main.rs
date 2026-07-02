@@ -302,7 +302,7 @@ fn derive_findings(cells: &[SurfaceCell], block_size: u64) -> Findings {
 
 // ───────────────────────── scan ─────────────────────────────────────────────
 
-fn scan(path: &PathBuf, block_size: u64) -> std::io::Result<SurfaceField> {
+fn scan(path: &PathBuf, block_size: u64, sample_bytes: u64) -> std::io::Result<SurfaceField> {
     let file = File::open(path)?;                 // read-only handle
     let mmap = unsafe { Mmap::map(&file)? };      // read-only mapping
     let total = mmap.len() as u64;
@@ -315,7 +315,14 @@ fn scan(path: &PathBuf, block_size: u64) -> std::io::Result<SurfaceField> {
         .map(|idx| {
             let start = idx * bs;
             let end = std::cmp::min(start + bs, total);
-            let block = &mmap[start as usize..end as usize];
+            // Large-drive mode: sample only the head of each block for the
+            // entropy estimate so a 4TB scan pages in a fraction of the bytes.
+            // Texture classes (encrypted/zeroed/text) are stable at 64KB; the
+            // full block length is still recorded for geometry.
+            let scan_end = if sample_bytes > 0 {
+                std::cmp::min(start + sample_bytes, end)
+            } else { end };
+            let block = &mmap[start as usize..scan_end as usize];
             let mut hist = [0u32; 256];
             let entropy = shannon_entropy(block, &mut hist);
             let zero_frac = zero_fraction(block);
@@ -400,6 +407,7 @@ fn print_summary(f: &SurfaceField) {
 fn main() {
     let mut image: Option<PathBuf> = None;
     let mut block_size = DEFAULT_BLOCK;
+    let mut sample_bytes: u64 = 0; // 0 = full block; >0 = large-drive head-sample
     let mut json = false;
 
     let mut it = std::env::args().skip(1);
@@ -407,8 +415,17 @@ fn main() {
         match a.as_str() {
             "--image" => image = it.next().map(PathBuf::from),
             "--block-size" => block_size = it.next().and_then(|s| s.parse().ok()).unwrap_or(DEFAULT_BLOCK),
+            "--sample-bytes" => sample_bytes = it.next().and_then(|s| s.parse().ok()).unwrap_or(0),
             "--json" => json = true,
-            "-h" | "--help" => { eprintln!("usage: surface-engine --image PATH [--block-size N] [--json]"); return; }
+            "-h" | "--help" => {
+                eprintln!("usage: surface-engine --image PATH [--block-size N] [--sample-bytes N] [--json]");
+                eprintln!("  --block-size N    surface cell size in bytes (default 1 MiB)");
+                eprintln!("  --sample-bytes N  large-drive mode: read only first N bytes of each block");
+                eprintln!("                    for the entropy estimate (e.g. 65536). Cuts I/O ~16x on");
+                eprintln!("                    a 4TB drive; texture classes stay accurate. Geometry (full");
+                eprintln!("                    block length) is still recorded.");
+                return;
+            }
             other => { eprintln!("surface-engine: unknown arg '{other}'"); std::process::exit(2); }
         }
     }
@@ -416,7 +433,7 @@ fn main() {
         Some(p) => p,
         None => { eprintln!("surface-engine: --image PATH required"); std::process::exit(2); }
     };
-    match scan(&path, block_size) {
+    match scan(&path, block_size, sample_bytes) {
         Ok(field) => {
             if json {
                 println!("{}", serde_json::to_string(&field).unwrap());
