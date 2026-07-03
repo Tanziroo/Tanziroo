@@ -1,0 +1,37 @@
+{
+  "generated_utc": "2026-07-02T14:55:27Z",
+  "sample_bytes": 65536,
+  "fleet_size": 3,
+  "drives": [
+    {
+      "source": "/tmp/drive-c-hot.img",
+      "bytes": 76546048,
+      "layers": 2,
+      "hidden_in_free_space": 2,
+      "drive_tail": 0,
+      "anomalies": 1,
+      "notable": 0,
+      "priority": 250
+    },
+    {
+      "source": "/tmp/xray-golden-fixture.img",
+      "bytes": 96468992,
+      "layers": 3,
+      "hidden_in_free_space": 1,
+      "drive_tail": 0,
+      "anomalies": 1,
+      "notable": 1,
+      "priority": 180
+    },
+    {
+      "source": "/tmp/drive-b-clean.img",
+      "bytes": 96468992,
+      "layers": 0,
+      "hidden_in_free_space": 0,
+      "drive_tail": 0,
+      "anomalies": 0,
+      "notable": 0,
+      "priority": 0
+    }
+  ]
+}
