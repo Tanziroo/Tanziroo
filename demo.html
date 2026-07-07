@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Real Model Demo · glTF + HDRI IBL — the honest ceiling</title>
+<style>
+:root{--bg:#0b0a10;--ink:#ece9f5;--muted:#9c97b8;--accent:#ff2e88;--accent-2:#21d4fd;--line:#2a2740;}
+*{box-sizing:border-box;} html,body{margin:0;height:100%;}
+body{background:var(--bg);color:var(--ink);font-family:'SFMono-Regular',Consolas,'Roboto Mono',monospace;overflow:hidden;-webkit-tap-highlight-color:transparent;}
+#scene{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;}
+#hud{position:fixed;top:8px;left:8px;z-index:10;background:#141220cc;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:12px;line-height:1.6;max-width:min(80vw,340px);backdrop-filter:blur(6px);}
+#hud b{background:linear-gradient(90deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent;font-size:14px;}
+#hud .t{color:var(--muted);}
+#hud .ok{color:var(--accent-2);} #hud .bad{color:#ff6b9d;}
+#ctl{position:fixed;bottom:8px;left:8px;right:8px;z-index:10;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;}
+#ctl button{background:#211d36;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:inherit;font-size:12px;cursor:pointer;}
+#ctl button.on{border-color:var(--accent);color:#fff;background:#2a1636;}
+#status{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#0b0a10;color:#9c97b8;text-align:center;padding:24px;z-index:50;font-size:13px;line-height:1.7;}
+</style>
+</head>
+<body>
+<canvas id="scene"></canvas>
+
+<div id="hud" style="display:none">
+  <b>⛧ Real model · not primitives</b><br>
+  <span class="t">A rigged, skinned, animated glTF character with PBR textures, lit by an HDRI
+  environment (image-based lighting) + ACES — loaded from a public CDN, on this same htmlpreview link,
+  no hosting. This is the pipeline your own Maya/Blender export would drop into.</span>
+  <div id="stats" style="margin-top:8px"></div>
+</div>
+
+<div id="ctl" style="display:none">
+  <button id="bClip" class="on">anim: Walk</button>
+  <button id="bBg" class="on">show HDRI</button>
+  <button id="bWire">wireframe</button>
+  <button id="bRot" class="on">turntable</button>
+</div>
+
+<div id="status"><div><div style="font-size:20px;color:#ece9f5">⛧ loading a real model…</div><div id="smsg" style="margin-top:10px">booting 3D engine…</div></div></div>
+
+<script>
+/* Assets: three r147 (last release with global example loaders) from jsDelivr's
+   GitHub mirror, which serves with open CORS. Same tag for engine + loaders +
+   model + HDRI so everything is version-consistent. */
+var GH='https://cdn.jsdelivr.net/gh/mrdoob/three.js@r147/';
+var NPM='https://cdn.jsdelivr.net/npm/three@0.147.0/';
+var UNPKG='https://unpkg.com/three@0.147.0/';
+var MODEL=[GH+'examples/models/gltf/Soldier.glb', NPM+'examples/models/gltf/Soldier.glb', UNPKG+'examples/models/gltf/Soldier.glb'];
+var HDRI=[GH+'examples/textures/equirectangular/royal_esplanade_1k.hdr', NPM+'examples/textures/equirectangular/royal_esplanade_1k.hdr', UNPKG+'examples/textures/equirectangular/royal_esplanade_1k.hdr'];
+
+var smsg=document.getElementById('smsg');
+function say(t,bad){smsg.innerHTML=t; if(bad)smsg.className='bad';}
+
+function loadScript(urls,done){var i=0;(function n(){if(i>=urls.length){done(new Error('cdn'));return;}var s=document.createElement('script');s.src=urls[i++];s.onload=function(){done(null);};s.onerror=n;document.head.appendChild(s);})();}
+function urlsFor(path){return [GH+path, NPM+path, UNPKG+path];}
+
+/* WebGL check */
+try{var tc=document.createElement('canvas');if(!(tc.getContext('webgl')||tc.getContext('experimental-webgl')))throw 0;}catch(e){say('WebGL is disabled in this browser.',1);}
+
+say('loading engine…');
+loadScript([GH+'build/three.min.js', NPM+'build/three.min.js', UNPKG+'build/three.min.js','https://cdnjs.cloudflare.com/ajax/libs/three.js/0.147.0/three.min.js'],function(err){
+  if(err||!window.THREE){say('Couldn\'t load Three.js (network/CORS).',1);return;}
+  say('loading loaders…');
+  // load the three global example loaders in sequence
+  loadScript(urlsFor('examples/js/controls/OrbitControls.js'),function(){
+  loadScript(urlsFor('examples/js/loaders/GLTFLoader.js'),function(e2){
+  loadScript(urlsFor('examples/js/loaders/RGBELoader.js'),function(e3){
+    if(typeof THREE.GLTFLoader!=='function'||typeof THREE.RGBELoader!=='function'){say('Couldn\'t load the glTF/HDRI loaders.',1);return;}
+    try{start();}catch(e){say('start failed: '+(e&&e.message||e),1);}
+  });});});
+});
+
+function start(){
+"use strict";
+var canvas=document.getElementById('scene');
+var renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.physicallyCorrectLights=true;
+renderer.outputEncoding=THREE.sRGBEncoding;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.0;
+renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+
+var scene=new THREE.Scene();
+var camera=new THREE.PerspectiveCamera(40,1,0.1,100);camera.position.set(0.4,1.3,3.4);
+var controls=new THREE.OrbitControls(camera,canvas);controls.target.set(0,0.9,0);controls.enableDamping=true;controls.maxPolarAngle=Math.PI*0.92;controls.minDistance=1.2;controls.maxDistance=8;
+
+// a key/shadow light (IBL gives ambient + reflections; this adds a cast shadow)
+var key=new THREE.DirectionalLight(0xffffff,2.2);key.position.set(3,6,4);key.castShadow=true;
+key.shadow.mapSize.set(2048,2048);key.shadow.camera.near=0.5;key.shadow.camera.far=20;key.shadow.bias=-0.0004;
+key.shadow.camera.left=-3;key.shadow.camera.right=3;key.shadow.camera.top=4;key.shadow.camera.bottom=-1;
+scene.add(key);
+
+// ground that only catches shadow (keeps the HDRI backdrop clean)
+var ground=new THREE.Mesh(new THREE.PlaneGeometry(40,40),new THREE.ShadowMaterial({opacity:0.35}));
+ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
+
+var pmrem=new THREE.PMREMGenerator(renderer);pmrem.compileEquirectangularShader();
+
+/* ---- HDRI image-based lighting ---- */
+say('loading HDRI environment…');
+var envTex=null, showBg=true;
+new THREE.RGBELoader().load(HDRI[0],function(hdr){
+  hdr.mapping=THREE.EquirectangularReflectionMapping;
+  envTex=pmrem.fromEquirectangular(hdr).texture;
+  scene.environment=envTex; scene.background=envTex;
+  hdr.dispose();
+  loadModel();
+},null,function(){ // fallback CDN
+  new THREE.RGBELoader().load(HDRI[1],function(hdr){hdr.mapping=THREE.EquirectangularReflectionMapping;envTex=pmrem.fromEquirectangular(hdr).texture;scene.environment=envTex;scene.background=envTex;hdr.dispose();loadModel();},null,function(){
+    // no HDRI: fall back to a plain studio so the model still shows
+    scene.background=new THREE.Color(0x1a1726); scene.add(new THREE.HemisphereLight(0xbfb9e0,0x16121f,1.2)); loadModel();
+  });
+});
+
+/* ---- the real character ---- */
+var mixer=null, actions={}, current=null, model=null, clock=new THREE.Clock(), rotate=true, wire=false;
+function loadModel(){
+  say('loading character mesh + textures…');
+  var loader=new THREE.GLTFLoader();
+  function tryLoad(i){
+    if(i>=MODEL.length){say('Couldn\'t load the model from any CDN.',1);return;}
+    loader.load(MODEL[i],onLoad,function(p){ if(p&&p.total)say('loading character… '+Math.round(p.loaded/p.total*100)+'%'); },function(){tryLoad(i+1);});
+  }
+  tryLoad(0);
+}
+function onLoad(gltf){
+  model=gltf.scene;
+  model.traverse(function(o){ if(o.isMesh){o.castShadow=true;o.receiveShadow=true;o.frustumCulled=false;} });
+  scene.add(model);
+  // animations: Soldier ships Idle / Walk / Run / TPose
+  mixer=new THREE.AnimationMixer(model);
+  var clips=gltf.animations||[];
+  clips.forEach(function(c){actions[c.name]=mixer.clipAction(c);});
+  var order=['Walk','Run','Idle'];
+  var pick=order.filter(function(n){return actions[n];})[0] || (clips[0]&&clips[0].name);
+  if(pick){current=actions[pick];current.play();document.getElementById('bClip').textContent='anim: '+pick;}
+  document.getElementById('status').style.display='none';
+  document.getElementById('hud').style.display='';
+  document.getElementById('ctl').style.display='';
+  document.getElementById('stats').innerHTML='<span class="ok">'+countTris(model).toLocaleString()+' triangles</span> · '+countMeshes(model)+' skinned mesh(es) · '+clips.length+' clips · PBR + HDRI IBL';
+  wireControls(clips);
+  animate();
+}
+function countTris(root){var n=0;root.traverse(function(o){if(o.isMesh&&o.geometry){var g=o.geometry;n+=g.index?g.index.count/3:(g.attributes.position?g.attributes.position.count/3:0);}});return Math.round(n);}
+function countMeshes(root){var n=0;root.traverse(function(o){if(o.isMesh)n++;});return n;}
+
+function wireControls(clips){
+  document.getElementById('bClip').onclick=function(){
+    var names=clips.map(function(c){return c.name;}).filter(function(n){return n!=='TPose';});
+    if(!names.length)return; var cur=current?current.getClip().name:''; var idx=(names.indexOf(cur)+1)%names.length; var nm=names[idx];
+    var next=actions[nm]; if(!next)return;
+    if(current)current.fadeOut(0.3); next.reset().fadeIn(0.3).play(); current=next; this.textContent='anim: '+nm;
+  };
+  document.getElementById('bBg').onclick=function(){showBg=!showBg;scene.background=showBg&&envTex?envTex:new THREE.Color(0x0b0a10);this.classList.toggle('on',showBg);this.textContent=showBg?'show HDRI':'hide HDRI';};
+  document.getElementById('bWire').onclick=function(){wire=!wire;model.traverse(function(o){if(o.isMesh&&o.material){(Array.isArray(o.material)?o.material:[o.material]).forEach(function(m){m.wireframe=wire;});}});this.classList.toggle('on',wire);};
+  document.getElementById('bRot').onclick=function(){rotate=!rotate;this.classList.toggle('on',rotate);};
+}
+
+function resize(){var w=canvas.clientWidth,h=canvas.clientHeight;if(w&&h&&(canvas.width!==w||canvas.height!==h)){renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}}
+function animate(){
+  requestAnimationFrame(animate);
+  var dt=clock.getDelta();
+  if(mixer)mixer.update(dt);
+  if(rotate&&model)model.rotation.y+=dt*0.4;
+  resize();controls.update();
+  renderer.render(scene,camera);
+}
+}
+</script>
+</body>
+</html>
