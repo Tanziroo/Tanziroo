@@ -149,20 +149,20 @@ function group(n){var g=new THREE.Group();g.name=n;return g;}
 function buildAvatar(){
   var g=group('avatar');
   function add(m){S(m);g.add(m);return m;}
-  add(lathe([[0.155,P.hipY-0.04],[0.168,P.hipY+0.02],[0.150,P.hipY+0.07],[0.122,P.waistY],[0.135,P.waistY+0.08],[0.156,P.chestY-0.02],[0.150,P.chestY+0.05],[0.105,P.shoulderY-0.03],[0.070,P.neckY-0.02],[0.056,P.neckY+0.02]],SKIN,32));
-  [-1,1].forEach(function(s){var b=add(new THREE.Mesh(new THREE.SphereGeometry(0.072,20,16),SKIN));b.position.set(s*0.062,P.chestY+0.01,0.105);b.scale.set(1,0.9,0.8);});
-  var pel=add(new THREE.Mesh(new THREE.SphereGeometry(0.155,24,16),SKIN));pel.position.set(0,P.hipY-0.05,0);pel.scale.set(1,0.7,0.85);
+  add(lathe([[0.155,P.hipY-0.04],[0.168,P.hipY+0.02],[0.150,P.hipY+0.07],[0.122,P.waistY],[0.135,P.waistY+0.08],[0.156,P.chestY-0.02],[0.150,P.chestY+0.05],[0.105,P.shoulderY-0.03],[0.070,P.neckY-0.02],[0.056,P.neckY+0.02]],SKIN,56));
+  [-1,1].forEach(function(s){var b=add(new THREE.Mesh(new THREE.SphereGeometry(0.072,28,22),SKIN));b.position.set(s*0.062,P.chestY+0.01,0.105);b.scale.set(1,0.9,0.8);});
+  var pel=add(new THREE.Mesh(new THREE.SphereGeometry(0.155,32,22),SKIN));pel.position.set(0,P.hipY-0.05,0);pel.scale.set(1,0.7,0.85);
   // subtle navel + collarbones
   var deep=new THREE.MeshStandardMaterial({color:0xb98a7a,roughness:0.7});
   var navel=add(new THREE.Mesh(new THREE.SphereGeometry(0.012,10,8),deep));navel.position.set(0,P.waistY-0.05,0.118);navel.scale.set(1,1.3,0.5);
   [-1,1].forEach(function(s){var cb=add(new THREE.Mesh(new THREE.CapsuleGeometry(0.007,0.07,4,8),SKIN));cb.position.set(s*0.05,P.shoulderY-0.02,0.092);cb.rotation.set(0,0,s*0.55);});
   var neck=add(new THREE.Mesh(new THREE.CylinderGeometry(P.neckR,P.neckR+0.01,0.09,16),SKIN));neck.position.set(0,P.neckY+0.05,0);
-  var head=add(new THREE.Mesh(new THREE.SphereGeometry(P.headR,28,24),SKIN));head.position.set(0,P.headY,0);head.scale.set(0.92,1.08,0.95);
+  var head=add(new THREE.Mesh(new THREE.SphereGeometry(P.headR,40,30),SKIN));head.position.set(0,P.headY,0);head.scale.set(0.92,1.08,0.95);
   var hb=add(new THREE.Mesh(new THREE.SphereGeometry(P.headR+0.02,24,20),HAIR));hb.position.set(0,P.headY+0.01,-0.015);hb.scale.set(1.05,1.18,1.05);
   // hair: crown volume + parted bangs + long back + side strands framing the face
   var cap=add(new THREE.Mesh(new THREE.SphereGeometry(P.headR+0.018,24,20),HAIR));cap.position.set(0,P.headY+0.012,-0.02);cap.scale.set(1.06,1.15,1.04);
-  [-1,1].forEach(function(s){var bang=add(new THREE.Mesh(new THREE.BoxGeometry(0.105,0.082,0.10),HAIR));bang.position.set(s*0.052,P.headY+0.056,0.044);bang.rotation.set(-0.14,0,s*0.10);});
-  var bk=add(new THREE.Mesh(new THREE.BoxGeometry(0.215,0.42,0.13),HAIR));bk.position.set(0,P.headY-0.19,-0.05);
+  [-1,1].forEach(function(s){var bang=add(new THREE.Mesh(new THREE.SphereGeometry(0.062,20,16),HAIR));bang.position.set(s*0.050,P.headY+0.050,0.050);bang.scale.set(1.0,0.72,0.95);bang.rotation.set(-0.10,0,s*0.10);});
+  var bk=add(new THREE.Mesh(new THREE.CapsuleGeometry(0.115,0.34,14,22),HAIR));bk.position.set(0,P.headY-0.19,-0.05);bk.scale.set(0.92,1.0,0.55);
   [-1,1].forEach(function(s){var st=add(new THREE.Mesh(new THREE.CapsuleGeometry(0.046,0.34,8,12),HAIR));st.position.set(s*0.108,P.headY-0.19,0.015);
     var fs=add(new THREE.Mesh(new THREE.CapsuleGeometry(0.022,0.26,6,10),HAIR));fs.position.set(s*0.098,P.headY-0.12,0.055);});
   // face: eyes with iris, winged eyeliner, brows, nose, lips
@@ -180,19 +180,19 @@ function buildAvatar(){
   var lip=add(new THREE.Mesh(new THREE.SphereGeometry(0.024,16,10),lipM));lip.position.set(0,P.headY-0.055,P.headR*0.90);lip.scale.set(1.45,0.62,0.6);
   [-1,1].forEach(function(s){
     var sh=add(new THREE.Mesh(new THREE.SphereGeometry(0.058,16,14),SKIN));sh.position.set(s*P.shoulderX,P.shoulderY,0);
-    var up=add(new THREE.Mesh(new THREE.CapsuleGeometry((P.upperArmR+P.foreArmR)/2,0.26,8,14),SKIN));up.position.set(s*(P.shoulderX+0.03),P.shoulderY-0.16,0);up.rotation.z=s*0.14;
+    var up=add(new THREE.Mesh(new THREE.CapsuleGeometry((P.upperArmR+P.foreArmR)/2,0.26,14,22),SKIN));up.position.set(s*(P.shoulderX+0.03),P.shoulderY-0.16,0);up.rotation.z=s*0.14;
     var el=add(new THREE.Mesh(new THREE.SphereGeometry(0.045,14,12),SKIN));el.position.set(s*(P.shoulderX+0.07),P.shoulderY-0.30,0);
-    var fo=add(new THREE.Mesh(new THREE.CapsuleGeometry((P.foreArmR+0.034)/2,0.24,8,14),SKIN));fo.position.set(s*(P.shoulderX+0.085),P.shoulderY-0.44,0);fo.rotation.z=s*0.10;
-    var palm=add(new THREE.Mesh(new THREE.BoxGeometry(0.05,0.075,0.026),SKIN));palm.position.set(s*(P.shoulderX+0.10),P.shoulderY-0.555,0);palm.rotation.z=s*0.10;
-    var fing=add(new THREE.Mesh(new THREE.BoxGeometry(0.046,0.05,0.022),SKIN));fing.position.set(s*(P.shoulderX+0.105),P.shoulderY-0.605,0);fing.rotation.z=s*0.10;
+    var fo=add(new THREE.Mesh(new THREE.CapsuleGeometry((P.foreArmR+0.034)/2,0.24,14,22),SKIN));fo.position.set(s*(P.shoulderX+0.085),P.shoulderY-0.44,0);fo.rotation.z=s*0.10;
+    var palm=add(new THREE.Mesh(new THREE.SphereGeometry(0.034,18,14),SKIN));palm.position.set(s*(P.shoulderX+0.10),P.shoulderY-0.555,0);palm.scale.set(0.82,1.35,0.5);palm.rotation.z=s*0.10;
+    var fing=add(new THREE.Mesh(new THREE.CapsuleGeometry(0.020,0.05,10,14),SKIN));fing.position.set(s*(P.shoulderX+0.108),P.shoulderY-0.62,0);fing.scale.set(1.15,1.0,0.5);fing.rotation.z=s*0.10;
     var thumb=add(new THREE.Mesh(new THREE.CapsuleGeometry(0.012,0.03,4,8),SKIN));thumb.position.set(s*(P.shoulderX+0.075),P.shoulderY-0.55,0.012);thumb.rotation.z=s*0.6;
   });
   [-1,1].forEach(function(s){
-    var th=add(new THREE.Mesh(new THREE.CapsuleGeometry(P.thighR,0.34,8,14),SKIN));th.position.set(s*P.legX,(P.hipY+P.kneeY)/2+0.02,0);th.scale.set(1,1,0.95);
+    var th=add(new THREE.Mesh(new THREE.CapsuleGeometry(P.thighR,0.34,14,22),SKIN));th.position.set(s*P.legX,(P.hipY+P.kneeY)/2+0.02,0);th.scale.set(1,1,0.95);
     var kn=add(new THREE.Mesh(new THREE.SphereGeometry(0.06,14,12),SKIN));kn.position.set(s*P.legX,P.kneeY,0);
-    var ca=add(new THREE.Mesh(new THREE.CapsuleGeometry(P.calfR,0.32,8,14),SKIN));ca.position.set(s*P.legX,(P.kneeY+P.ankleY)/2+0.02,0);
-    var ft=add(new THREE.Mesh(new THREE.BoxGeometry(0.068,0.045,0.14),SKIN));ft.position.set(s*P.legX,P.ankleY-0.045,0.03);
-    var toe=add(new THREE.Mesh(new THREE.BoxGeometry(0.066,0.032,0.05),SKIN));toe.position.set(s*P.legX,P.ankleY-0.052,0.105);toe.rotation.x=0.18;
+    var ca=add(new THREE.Mesh(new THREE.CapsuleGeometry(P.calfR,0.32,14,22),SKIN));ca.position.set(s*P.legX,(P.kneeY+P.ankleY)/2+0.02,0);
+    var ft=add(new THREE.Mesh(new THREE.CapsuleGeometry(0.034,0.085,12,18),SKIN));ft.rotation.x=Math.PI/2;ft.position.set(s*P.legX,P.ankleY-0.028,0.05);ft.scale.set(1.0,1.0,1.0);
+    var toe=add(new THREE.Mesh(new THREE.SphereGeometry(0.034,16,12),SKIN));toe.position.set(s*P.legX,P.ankleY-0.04,0.115);toe.scale.set(1.0,0.68,0.95);
     var heel=add(new THREE.Mesh(new THREE.SphereGeometry(0.035,12,10),SKIN));heel.position.set(s*P.legX,P.ankleY-0.03,-0.035);heel.scale.set(0.95,0.85,1);
   });
   return g;
