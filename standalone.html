@@ -401,6 +401,10 @@ Wardrobe.prototype.applyPreset=function(p){this.clearAll();var self=this;
 var canvas=document.getElementById('scene');
 var renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true});
 renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+// Physical light units: the key/rim intensities (90/55/48) are candela-scale,
+// which r147 only honours with this on. Without it, legacy falloff flattens the
+// whole rig into ambient + a soft directional (the "nothing pops" look).
+renderer.physicallyCorrectLights=true;
 renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 // Colour management: without this, dark PBR colours read as flat grey speculars.
 renderer.outputEncoding=THREE.sRGBEncoding;
