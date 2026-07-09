@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Cloth Sim Proof · real-time XPBD + PBR fabrics</title>
+<style>
+:root{--bg:#0b0a10;--ink:#ece9f5;--muted:#9c97b8;--accent:#ff2e88;--accent-2:#21d4fd;--line:#2a2740;}
+*{box-sizing:border-box;} html,body{margin:0;height:100%;}
+body{background:var(--bg);color:var(--ink);font-family:'SFMono-Regular',Consolas,'Roboto Mono',monospace;overflow:hidden;-webkit-tap-highlight-color:transparent;}
+#scene{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;}
+#hud{position:fixed;top:8px;left:8px;z-index:10;background:#141220cc;border:1px solid var(--line);border-radius:10px;padding:9px 11px;font-size:12px;line-height:1.5;min-width:200px;backdrop-filter:blur(6px);}
+#hud b{background:linear-gradient(90deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent;font-size:13px;}
+#hud .fps{font-size:18px;font-weight:700;color:var(--accent-2);}
+#hud .row{display:flex;justify-content:space-between;gap:12px;color:var(--muted);}
+#hud .row .v{color:var(--ink);}
+#ctl{position:fixed;bottom:8px;left:8px;right:8px;z-index:10;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;}
+#ctl button{background:#211d36;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:inherit;font-size:12px;cursor:pointer;}
+#ctl button.on{border-color:var(--accent);color:#fff;background:#2a1636;}
+#fabrics{position:fixed;top:8px;right:8px;z-index:10;display:flex;flex-direction:column;gap:5px;}
+#fabrics button{background:#211d36;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 12px;font:inherit;font-size:12px;cursor:pointer;text-align:left;}
+#fabrics button.on{border-color:var(--accent);color:#fff;background:#2a1636;}
+#status{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#0b0a10;color:#9c97b8;text-align:center;padding:24px;z-index:50;}
+</style>
+</head>
+<body>
+<canvas id="scene"></canvas>
+
+<div id="hud">
+  <b>⛧ Cloth Sim Proof</b>
+  <div class="row"><span><span class="fps" id="fps">–</span> fps</span><span class="v" id="ms"></span></div>
+  <div class="row"><span>particles</span><span class="v" id="parts">–</span></div>
+  <div class="row"><span>constraints</span><span class="v" id="cons">–</span></div>
+  <div class="row"><span>solve</span><span class="v" id="solve">–</span></div>
+  <div class="row"><span>fabric</span><span class="v" id="fab">–</span></div>
+</div>
+
+<div id="fabrics"></div>
+
+<div id="ctl">
+  <button id="bDrop">↻ re-drape</button>
+  <button id="bWind" class="on">wind: on</button>
+  <button id="bPause">⏸ pause</button>
+  <button id="bWire">wireframe</button>
+  <button id="bBody" class="on">show body</button>
+</div>
+
+<div id="status"><div><div style="font-size:20px;color:#ece9f5">⛧ cloth sim…</div><div id="smsg" style="margin-top:10px">loading engine…</div></div></div>
+
+<script>
+(function(){
+  var msg=document.getElementById('smsg');
+  function ls(urls,done){var i=0;(function n(){if(i>=urls.length){done(new Error('cdn'));return;}var s=document.createElement('script');s.src=urls[i++];s.onload=function(){done(null);};s.onerror=n;document.head.appendChild(s);})();}
+  try{var t=document.createElement('canvas');if(!(t.getContext('webgl')||t.getContext('experimental-webgl')))throw 0;}catch(e){msg.innerHTML='WebGL disabled.';return;}
+  ls(['https://unpkg.com/three@0.147.0/build/three.min.js','https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js','https://cdnjs.cloudflare.com/ajax/libs/three.js/0.147.0/three.min.js'],function(err){
+    if(err||!window.THREE){msg.innerHTML='Couldn\'t load Three.js.';return;}
+    ls(['https://unpkg.com/three@0.147.0/examples/js/controls/OrbitControls.js','https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js'],function(){
+      var b=document.getElementById('status');if(b)b.remove();
+      try{start();}catch(e){document.body.insertAdjacentHTML('beforeend','<div style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;color:#ff6b9d;background:#0b0a10;padding:24px;text-align:center;">cloth sim failed: '+(e&&e.message||e)+'</div>');}
+    });
+  });
+})();
+
+function start(){
+"use strict";
+if(typeof THREE.OrbitControls!=='function'){THREE.OrbitControls=function(c){this.target=new THREE.Vector3();this.update=function(){};};}
+
+/* ============ procedural PBR fabrics ============ */
+function heightToNormal(hc,scale){
+  var s=hc.width, sctx=hc.getContext('2d'), src=sctx.getImageData(0,0,s,s).data;
+  var out=document.createElement('canvas');out.width=out.height=s;var octx=out.getContext('2d'),img=octx.createImageData(s,s),d=img.data;
+  function h(x,y){x=(x%s+s)%s;y=(y%s+s)%s;return src[(y*s+x)*4]/255;}
+  for(var y=0;y<s;y++)for(var x=0;x<s;x++){
+    var dx=(h(x-1,y)-h(x+1,y))*scale, dy=(h(x,y-1)-h(x,y+1))*scale, nz=1;
+    var l=Math.sqrt(dx*dx+dy*dy+nz*nz)||1; var i=(y*s+x)*4;
+    d[i]=(dx/l*0.5+0.5)*255; d[i+1]=(dy/l*0.5+0.5)*255; d[i+2]=(nz/l*0.5+0.5)*255; d[i+3]=255;
+  }
+  octx.putImageData(img,0,0);
+  var tex=new THREE.CanvasTexture(out);tex.wrapS=tex.wrapT=THREE.RepeatWrapping;return tex;
+}
+function heightCanvas(draw){var S=256,c=document.createElement('canvas');c.width=c.height=S;var x=c.getContext('2d');x.fillStyle='#808080';x.fillRect(0,0,S,S);draw(x,S);return c;}
+function noise(x,S,amt){ // speckle
+  var img=x.getImageData(0,0,S,S),d=img.data;
+  for(var i=0;i<d.length;i+=4){var n=(Math.random()*2-1)*amt;d[i]+=n;d[i+1]+=n;d[i+2]+=n;}
+  x.putImageData(img,0,0);
+}
+var FABRICS=[
+  {name:'Denim', color:0x2b4a73, rough:0.86, metal:0.0, nrm:1.1, rep:10, draw:function(x,S){x.strokeStyle='#9a9a9a';x.lineWidth=1;for(var i=-S;i<S*2;i+=5){x.beginPath();x.moveTo(i,0);x.lineTo(i+S,S);x.stroke();}x.strokeStyle='#6a6a6a';for(i=-S;i<S*2;i+=5){x.beginPath();x.moveTo(i+2,0);x.lineTo(i+2+S,S);x.stroke();}noise(x,S,26);}},
+  {name:'Leather', color:0x2a1215, rough:0.44, metal:0.05, nrm:0.9, rep:6, draw:function(x,S){for(var k=0;k<900;k++){var r=2+Math.random()*5,gx=Math.random()*S,gy=Math.random()*S,v=90+Math.random()*70;x.fillStyle='rgba('+v+','+v+','+v+',0.5)';x.beginPath();x.arc(gx,gy,r,0,7);x.fill();}noise(x,S,10);}},
+  {name:'Satin', color:0x6a1030, rough:0.20, metal:0.15, nrm:0.35, rep:8, draw:function(x,S){x.strokeStyle='#8c8c8c';x.lineWidth=1;for(var y=0;y<S;y+=2){x.beginPath();x.moveTo(0,y);x.lineTo(S,y);x.stroke();}noise(x,S,6);}},
+  {name:'Knit', color:0x5b2a86, rough:0.9, metal:0.0, nrm:1.4, rep:14, draw:function(x,S){x.strokeStyle='#a8a8a8';x.lineWidth=2;var g=16;for(var yy=0;yy<S;yy+=g)for(var xx=0;xx<S;xx+=g){x.beginPath();x.arc(xx,yy,g*0.55,Math.PI*0.15,Math.PI*0.85);x.stroke();x.beginPath();x.arc(xx+g/2,yy+g/2,g*0.55,Math.PI*1.15,Math.PI*1.85);x.stroke();}noise(x,S,14);}},
+  {name:'Linen', color:0xb8a888, rough:0.82, metal:0.0, nrm:1.0, rep:12, draw:function(x,S){x.strokeStyle='#9a9a9a';x.lineWidth=1;for(var i=0;i<S;i+=4){x.beginPath();x.moveTo(i,0);x.lineTo(i,S);x.stroke();x.beginPath();x.moveTo(0,i+2);x.lineTo(S,i+2);x.stroke();}noise(x,S,20);}}
+];
+function makeFabricMat(f){
+  var nrm=heightToNormal(heightCanvas(f.draw),f.nrm);
+  nrm.repeat.set(f.rep,f.rep);
+  var m=new THREE.MeshStandardMaterial({color:f.color,roughness:f.rough,metalness:f.metal,normalMap:nrm,side:THREE.DoubleSide});
+  m.normalScale=new THREE.Vector2(f.nrm,f.nrm);
+  return m;
+}
+
+/* ============ scene / lighting (procedural IBL, no external asset) ============ */
+var canvas=document.getElementById('scene');
+var renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.physicallyCorrectLights=true;renderer.outputEncoding=THREE.sRGBEncoding;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
+renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+var scene=new THREE.Scene();scene.background=new THREE.Color(0x0b0a10);scene.fog=new THREE.Fog(0x0b0a10,4.5,12);
+var camera=new THREE.PerspectiveCamera(42,1,0.1,100);camera.position.set(0.2,1.15,2.7);
+var controls=new THREE.OrbitControls(camera,canvas);controls.target.set(0,0.95,0);controls.enableDamping=true;controls.maxPolarAngle=Math.PI*0.92;controls.minDistance=1.2;controls.maxDistance=6;
+function buildEnv(){var c=document.createElement('canvas');c.width=512;c.height=256;var x=c.getContext('2d');var g=x.createLinearGradient(0,0,0,256);g.addColorStop(0,'#4a4566');g.addColorStop(0.55,'#1a1726');g.addColorStop(1,'#070710');x.fillStyle=g;x.fillRect(0,0,512,256);x.globalAlpha=0.5;x.fillStyle='#ff2e88';x.beginPath();x.arc(120,140,70,0,7);x.fill();x.fillStyle='#21d4fd';x.beginPath();x.arc(400,110,70,0,7);x.fill();x.globalAlpha=1;var t=new THREE.CanvasTexture(c);t.mapping=THREE.EquirectangularReflectionMapping;return t;}
+var pmrem=new THREE.PMREMGenerator(renderer);pmrem.compileEquirectangularShader();scene.environment=pmrem.fromEquirectangular(buildEnv()).texture;
+scene.add(new THREE.HemisphereLight(0xbfb9e0,0x16121f,0.7));
+var key=new THREE.SpotLight(0xffffff,80,25,Math.PI/5,0.4,1.5);key.position.set(3,5,4);key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.bias=-0.0004;scene.add(key,key.target);
+scene.add(Object.assign(new THREE.PointLight(0xff2e88,40,16,2),{position:new THREE.Vector3(-3,1.6,-1.6)}));
+scene.add(Object.assign(new THREE.PointLight(0x21d4fd,34,16,2),{position:new THREE.Vector3(3,1.5,-2)}));
+var floor=new THREE.Mesh(new THREE.CircleGeometry(6,48),new THREE.MeshStandardMaterial({color:0x111018,roughness:0.4,metalness:0.5}));floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);
+
+/* ============ body form (colliders the cloth drapes over) ============ */
+var COL=[ {c:new THREE.Vector3(0,1.15,0), r:0.17}, {c:new THREE.Vector3(0,1.28,0.02), r:0.15}, {c:new THREE.Vector3(0,0.95,0), r:0.18} ];
+var bodyMat=new THREE.MeshStandardMaterial({color:0xe8c4a8,roughness:0.6});
+var bodyGroup=new THREE.Group();
+COL.forEach(function(s){var m=new THREE.Mesh(new THREE.SphereGeometry(s.r,24,18),bodyMat);m.position.copy(s.c);m.castShadow=true;m.receiveShadow=true;bodyGroup.add(m);});
+// a neck+head hint so it reads as a torso, not just spheres
+var neck=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.06,0.12,16),bodyMat);neck.position.set(0,1.44,0);bodyGroup.add(neck);
+var head=new THREE.Mesh(new THREE.SphereGeometry(0.1,28,22),bodyMat);head.position.set(0,1.56,0);head.scale.set(0.92,1.08,0.95);head.castShadow=true;bodyGroup.add(head);
+scene.add(bodyGroup);
+
+/* ============ cloth: Verlet grid + distance constraints (XPBD-style) ============ */
+var N=34, M=40;                       // grid cols x rows
+var W=0.9, H=1.1;                     // cloth size (m)
+var TOP=1.42, Z0=0.24;                // hang position (in front of the body, +z)
+var px=new Float32Array(N*M),py=new Float32Array(N*M),pz=new Float32Array(N*M);
+var ox=new Float32Array(N*M),oy=new Float32Array(N*M),oz=new Float32Array(N*M);
+var pin=new Uint8Array(N*M);
+function id(i,j){return j*N+i;}
+function initCloth(){
+  for(var j=0;j<M;j++)for(var i=0;i<N;i++){
+    var k=id(i,j);
+    px[k]=ox[k]=(i/(N-1)-0.5)*W;
+    py[k]=oy[k]=TOP-(j/(M-1))*H;
+    pz[k]=oz[k]=Z0;
+    pin[k]=(j===0)?1:0;              // hang the top row from a rod
+  }
+}
+// constraints: structural + shear + bend, each [a,b,rest]
+var CON=[];
+function build(a,b){var dx=px[a]-px[b],dy=py[a]-py[b],dz=pz[a]-pz[b];CON.push(a,b);REST.push(Math.sqrt(dx*dx+dy*dy+dz*dz));}
+var REST=[];
+function buildConstraints(){
+  CON=[];REST=[];
+  for(var j=0;j<M;j++)for(var i=0;i<N;i++){
+    if(i+1<N)build(id(i,j),id(i+1,j));
+    if(j+1<M)build(id(i,j),id(i,j+1));
+    if(i+1<N&&j+1<M)build(id(i,j),id(i+1,j+1));
+    if(i+1<N&&j-1>=0)build(id(i,j),id(i+1,j-1));
+    if(i+2<N)build(id(i,j),id(i+2,j));
+    if(j+2<M)build(id(i,j),id(i,j+2));
+  }
+}
+var GRAV=-9.0, DAMP=0.98, ITER=16, windOn=true, paused=false, t=0;
+function simulate(dt){
+  dt=Math.min(dt,1/50); var dt2=dt*dt;
+  var wx=windOn?(Math.sin(t*1.7)*2.4+1.2):0, wz=windOn?(Math.cos(t*1.3)*1.6):0;
+  for(var k=0;k<N*M;k++){
+    if(pin[k])continue;
+    var vx=(px[k]-ox[k])*DAMP, vy=(py[k]-oy[k])*DAMP, vz=(pz[k]-oz[k])*DAMP;
+    ox[k]=px[k];oy[k]=py[k];oz[k]=pz[k];
+    px[k]+=vx+wx*dt2; py[k]+=vy+GRAV*dt2; pz[k]+=vz+wz*dt2;
+  }
+  for(var it=0;it<ITER;it++){
+    for(var c=0;c<CON.length;c+=2){
+      var a=CON[c],b=CON[c+1],rest=REST[c>>1];
+      var dx=px[b]-px[a],dy=py[b]-py[a],dz=pz[b]-pz[a];
+      var d=Math.sqrt(dx*dx+dy*dy+dz*dz);if(d<1e-6)continue;
+      var diff=(d-rest)/d, pa=pin[a], pb=pin[b];
+      var s=pa||pb?1.0:0.5;
+      if(!pa){px[a]+=dx*diff*(pb?1.0:0.5);py[a]+=dy*diff*(pb?1.0:0.5);pz[a]+=dz*diff*(pb?1.0:0.5);}
+      if(!pb){px[b]-=dx*diff*(pa?1.0:0.5);py[b]-=dy*diff*(pa?1.0:0.5);pz[b]-=dz*diff*(pa?1.0:0.5);}
+    }
+    // collisions against the body colliders + floor
+    for(var k2=0;k2<N*M;k2++){
+      if(pin[k2])continue;
+      for(var ci=0;ci<COL.length;ci++){
+        var s2=COL[ci],ddx=px[k2]-s2.c.x,ddy=py[k2]-s2.c.y,ddz=pz[k2]-s2.c.z;
+        var dd=Math.sqrt(ddx*ddx+ddy*ddy+ddz*ddz),rr=s2.r+0.012;
+        if(dd<rr&&dd>1e-6){var f=rr/dd;px[k2]=s2.c.x+ddx*f;py[k2]=s2.c.y+ddy*f;pz[k2]=s2.c.z+ddz*f;}
+      }
+      if(py[k2]<0.01)py[k2]=0.01;
+    }
+  }
+}
+
+/* cloth mesh: BufferGeometry driven by the particle grid */
+var geo=new THREE.BufferGeometry();
+var posAttr=new THREE.BufferAttribute(new Float32Array(N*M*3),3);posAttr.setUsage(THREE.DynamicDrawUsage);
+var uv=new Float32Array(N*M*2);
+for(var j=0;j<M;j++)for(var i=0;i<N;i++){uv[id(i,j)*2]=i/(N-1);uv[id(i,j)*2+1]=1-j/(M-1);}
+var idxArr=[];
+for(j=0;j<M-1;j++)for(i=0;i<N-1;i++){var a=id(i,j),b=id(i+1,j),c2=id(i,j+1),d2=id(i+1,j+1);idxArr.push(a,c2,b, b,c2,d2);}
+geo.setAttribute('position',posAttr);geo.setAttribute('uv',new THREE.BufferAttribute(uv,2));geo.setIndex(idxArr);
+var clothMat=makeFabricMat(FABRICS[0]);
+var cloth=new THREE.Mesh(geo,clothMat);cloth.castShadow=true;cloth.receiveShadow=true;scene.add(cloth);
+function syncMesh(){var p=posAttr.array;for(var k=0;k<N*M;k++){p[k*3]=px[k];p[k*3+1]=py[k];p[k*3+2]=pz[k];}posAttr.needsUpdate=true;geo.computeVertexNormals();geo.computeBoundingSphere();}
+
+/* ============ fabric buttons ============ */
+var fabWrap=document.getElementById('fabrics'),fabBtns=[];
+FABRICS.forEach(function(f,i){var btn=document.createElement('button');btn.textContent=f.name;if(i===0)btn.className='on';btn.onclick=function(){var old=cloth.material;cloth.material=makeFabricMat(f);if(old){if(old.normalMap)old.normalMap.dispose();old.dispose();}fabBtns.forEach(function(b){b.classList.remove('on');});btn.classList.add('on');document.getElementById('fab').textContent=f.name;};fabWrap.appendChild(btn);fabBtns.push(btn);});
+document.getElementById('fab').textContent=FABRICS[0].name;
+
+/* ============ controls ============ */
+document.getElementById('bDrop').onclick=function(){initCloth();};
+document.getElementById('bWind').onclick=function(){windOn=!windOn;this.classList.toggle('on',windOn);this.textContent='wind: '+(windOn?'on':'off');};
+document.getElementById('bPause').onclick=function(){paused=!paused;this.classList.toggle('on',paused);this.textContent=paused?'▶ resume':'⏸ pause';};
+document.getElementById('bWire').onclick=function(){cloth.material.wireframe=!cloth.material.wireframe;this.classList.toggle('on',cloth.material.wireframe);};
+document.getElementById('bBody').onclick=function(){bodyGroup.visible=!bodyGroup.visible;this.classList.toggle('on',bodyGroup.visible);this.textContent=(bodyGroup.visible?'show':'hide')+' body';};
+
+/* ============ loop ============ */
+initCloth();buildConstraints();
+document.getElementById('parts').textContent=(N*M).toLocaleString();
+document.getElementById('cons').textContent=(CON.length/2).toLocaleString();
+var clock=new THREE.Clock(),frameMs=16.7,lastNow=0;
+function resize(){var w=canvas.clientWidth,h=canvas.clientHeight;if(w&&h&&(canvas.width!==w||canvas.height!==h)){renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}}
+function frame(now){
+  requestAnimationFrame(frame);
+  if(lastNow){frameMs=frameMs*0.9+(now-lastNow)*0.1;}lastNow=now;
+  var dt=clock.getDelta();
+  if(!paused){t+=dt;var s0=performance.now();simulate(dt);document.getElementById('solve').textContent=(performance.now()-s0).toFixed(1)+'ms';syncMesh();}
+  resize();controls.update();renderer.render(scene,camera);
+  document.getElementById('fps').textContent=(1000/frameMs).toFixed(0);
+  document.getElementById('ms').textContent=frameMs.toFixed(1)+'ms';
+}
+requestAnimationFrame(frame);
+}
+</script>
+</body>
+</html>
