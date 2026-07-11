@@ -49,6 +49,7 @@ body{background:var(--bg);color:var(--ink);font-family:'SFMono-Regular',Consolas
       <div id="queue"></div>
       <div class="rowlbl">Realm context — where powers are governed</div>
       <div><button class="load on" id="realmShared">🌐 shared realm</button><button class="load" id="realmOwn">🏰 your paid realm</button></div>
+      <div style="margin-top:5px"><button class="load" id="visitorBtn">👤 no visitor</button></div>
       <div class="rowlbl">Certified — load to test interop</div>
       <div id="certified"><span style="font-size:10px;color:var(--muted)">run certification first</span></div>
       <div class="rowlbl">Shared manifest (signed)</div>
@@ -166,21 +167,24 @@ function loadMod(m){
 function byId(id){for(var i=0;i<MODS.length;i++)if(MODS[i].id===id)return MODS[i];}
 function activeCount(){return Object.keys(mounted).length;}
 
-/* realm context: powers are sovereign in your paid realm, gated in shared realms */
-var realm='shared';
+/* realm context + Ring 0 (Capital floor) — sovereign powers, but even root obeys the kernel */
+var realm='shared', visitor=null;
 function realmScopedLoaded(){var o=[];for(var id in mounted){var m=byId(id);if(m&&m.scope==='owner-realm')o.push(m);}return o;}
+function blockedCount(){var c=0;MODS.forEach(function(m){if(m.certified===false)c++;});return c;}
 function updateRealmBanner(){var rs=realmScopedLoaded();if(!rs.length)return false;var nm=rs.map(function(m){return m.name+' ('+m.abilities.join(',')+')';}).join(', ');
-  if(realm==='own')setBanner('🏰 <b>Your paid realm</b> — '+nm+': power <b style="color:var(--ok)">ACTIVE</b>. Your realm, your rules.','ok');
-  else setBanner('🌐 <b>Shared realm</b> — '+nm+': power <b style="color:var(--warn)">SUPPRESSED</b> for fair play (cosmetic here; full power only in your paid realm).','warn');
+  if(realm==='own')setBanner('🏰 <b>Your paid realm</b> — '+nm+': power <b style="color:var(--ok)">ACTIVE</b>. Your realm, your rules.'+(visitor?' <span style="color:var(--warn)">But visitor '+visitor.name+' ('+visitor.age+') still sees it SUPPRESSED — Ring 0 protects guests; root can\'t override.</span>':''),'ok');
+  else setBanner('🌐 <b>Shared realm</b> — '+nm+': power <b style="color:var(--warn)">SUPPRESSED</b> for fair play (full power only in your paid realm).','warn');
   return true;}
-function setRealm(r){realm=r;var s=document.getElementById('realmShared'),o=document.getElementById('realmOwn');if(s)s.classList.toggle('on',r==='shared');if(o)o.classList.toggle('on',r==='own');
-  if(!updateRealmBanner())setBanner(r==='own'?'🏰 Your paid realm — sovereign: every certified power is allowed here.':'🌐 Shared realm — the realm ruleset governs powers for fair play.',r==='own'?'ok':'');}
+function realmBase(){if(realm==='own')setBanner('🏰 <b>Your paid realm</b> — sovereign: certified powers allowed. <b>Ring 0 (Capital floor) still enforced</b>: '+blockedCount()+' mods stay blocked (integrity/IP/perf)'+(visitor?', visitor '+visitor.name+' ('+visitor.age+') stays protected':'')+'. Even root obeys the kernel.','ok');
+  else setBanner('🌐 Shared realm — realm ruleset governs powers; <b>Ring 0 Capital floor always on</b>'+(visitor?' (visitor '+visitor.name+' protected)':'')+'.','');}
+function setRealm(r){realm=r;var s=document.getElementById('realmShared'),o=document.getElementById('realmOwn');if(s)s.classList.toggle('on',r==='shared');if(o)o.classList.toggle('on',r==='own');if(!updateRealmBanner())realmBase();}
+function toggleVisitor(){visitor=visitor?null:{name:'Robin',age:8};var b=document.getElementById('visitorBtn');if(b){b.textContent=visitor?'👤 visitor: '+visitor.name+' ('+visitor.age+')':'👤 no visitor';b.classList.toggle('on',!!visitor);}if(!updateRealmBanner())realmBase();}
 
 /* ---- UI ---- */
 function badge(m){return m.certified==null?'<span class="st pend">pending</span>':(m.certified?'<span class="st cert">certified</span>':'<span class="st block">blocked</span>');}
 function renderQueue(){var q=document.getElementById('queue');q.innerHTML='';MODS.forEach(function(m){
   var d=document.createElement('div');d.className='mod';
-  var checks=m.checks?'<div class="checks show">'+m.checks.map(function(c){return '<div class="chk '+(c.ok?'ok':'no')+'"><span class="i">'+(c.ok?'✓':'✗')+'</span><span>'+c.name+'</span><span class="r">— '+c.r+'</span></div>';}).join('')+'</div>':'';
+  var checks=m.checks?'<div class="checks show">'+m.checks.map(function(c){return '<div class="chk '+(c.ok?'ok':'no')+'"><span class="i">'+(c.ok?'✓':'✗')+'</span><span>'+c.name+'</span><span class="r">— '+c.r+'</span></div>';}).join('')+(m.certified===false?'<div class="chk no"><span class="i">⛨</span><span>Ring 0 · Capital floor</span><span class="r">— enforced in every realm; can\'t be overridden, even by root</span></div>':'')+'</div>':'';
   d.innerHTML='<div class="top"><div><span class="nm">'+m.name+'</span> <span class="au">'+m.author+'</span><div class="meta">'+m.type+' · '+m.slot+' · '+m.tris.toLocaleString()+' tris · '+m.texKB+'KB · #'+m.contentHash+'</div></div>'+badge(m)+'</div>'+checks;
   q.appendChild(d);});}
 function refreshCertified(){var c=document.getElementById('certified');var cert=MODS.filter(function(m){return m.certified;});
@@ -197,6 +201,7 @@ document.getElementById('runBtn').onclick=function(){
 renderQueue();updateManifest();
 document.getElementById('realmShared').onclick=function(){setRealm('shared');};
 document.getElementById('realmOwn').onclick=function(){setRealm('own');};
+document.getElementById('visitorBtn').onclick=toggleVisitor;
 
 /* ---- render ---- */
 var companionT=0;
