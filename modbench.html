@@ -47,6 +47,8 @@ body{background:var(--bg);color:var(--ink);font-family:'SFMono-Regular',Consolas
       <button class="act" id="runBtn">▶ run forensic certification</button>
       <div class="rowlbl">Submission queue — mods from many authors</div>
       <div id="queue"></div>
+      <div class="rowlbl">Realm context — where powers are governed</div>
+      <div><button class="load on" id="realmShared">🌐 shared realm</button><button class="load" id="realmOwn">🏰 your paid realm</button></div>
       <div class="rowlbl">Certified — load to test interop</div>
       <div id="certified"><span style="font-size:10px;color:var(--muted)">run certification first</span></div>
       <div class="rowlbl">Shared manifest (signed)</div>
@@ -109,7 +111,9 @@ function b_crown(c){var g=new THREE.Group();g.add(S(new THREE.Mesh(new THREE.Tor
 function b_companion(c){var g=new THREE.Group();var bd=S(new THREE.Mesh(new THREE.SphereGeometry(0.09,16,14),new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:0.6,roughness:0.4})));g.add(bd);[-1,1].forEach(function(s){var w=S(new THREE.Mesh(new THREE.ConeGeometry(0.05,0.12,5),new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:0.4,transparent:true,opacity:0.7})));w.position.set(s*0.09,0,-0.02);w.rotation.z=s*1.2;g.add(w);});g.position.set(0.5,1.15,0.2);return g;}
 
 /* ---- the asset contract + budgets + forensic checks ---- */
-var TRIS_BUDGET=9000, TEX_BUDGET=2048, ALLOWED_ABIL=['emberflare','glow','sparkle','heal','trail'];
+var TRIS_BUDGET=9000, TEX_BUDGET=2048;
+var UNIVERSAL=['emberflare','glow','sparkle','heal','trail'];    // allowed in any realm
+var REALM_BOUND=['godmode','invuln','fly','oneshot','noclip'];   // sovereign powers — your paid realm only
 function hash(s){var h=5381;for(var i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))>>>0;return h.toString(16);}
 function canon(m){return JSON.stringify({id:m.id,type:m.type,slot:m.slot,tris:m.tris});}
 var MODS=[
@@ -120,7 +124,7 @@ var MODS=[
   {id:'circlet',author:'@vega',name:'Star Circlet',type:'wearable',slot:'head',tris:700,texKB:48,abilities:[],flags:{},trust:2,build:b_circlet,color:0x9fd0ff},
   {id:'megacrown',author:'@glit',name:'MegaCrown',type:'wearable',slot:'head',tris:82000,texKB:90,abilities:[],flags:{},trust:1,build:b_crown,color:0xffd35b},
   {id:'rippr',author:'@xx0',name:'Ripp’r Tee',type:'wearable',slot:'torso',tris:1500,texKB:8000,abilities:[],flags:{ip:true},trust:1,build:b_corset,color:0x2a2a2a},
-  {id:'godhalo',author:'@troll',name:'Godmode Halo',type:'wearable',slot:'head',tris:600,texKB:40,abilities:['invuln'],flags:{},trust:1,build:b_halo,color:0xff2038},
+  {id:'godhalo',author:'@troll',name:'Godmode Halo',type:'wearable',slot:'head',tris:600,texKB:40,abilities:['godmode'],flags:{},trust:1,build:b_halo,color:0xff2038},
   {id:'copyfae',author:'@mim',name:'Copyfae Wings',type:'wearable',slot:'back',tris:1200,texKB:70,abilities:[],flags:{},trust:1,build:b_wings,color:0xcfe6ff,tamper:true}
 ];
 // stamp content hashes: clean mods hash their canonical bytes; the tampered one carries a stale hash
@@ -133,8 +137,9 @@ function forensic(m){
   out.push({name:'schema conformance', ok:miss.length===0, r:miss.length?'missing: '+miss.join(','):'contract fields valid'});
   out.push({name:'perf budget', ok:m.tris<=TRIS_BUDGET&&m.texKB<=TEX_BUDGET, r:m.tris>TRIS_BUDGET?m.tris.toLocaleString()+' tris > '+TRIS_BUDGET.toLocaleString():(m.texKB>TEX_BUDGET?m.texKB+'KB tex > '+TEX_BUDGET+'KB':'within '+TRIS_BUDGET.toLocaleString()+' tris / '+TEX_BUDGET+'KB')});
   out.push({name:'content policy', ok:!m.flags.ip&&!m.flags.nsfw, r:m.flags.ip?'IP-infringement flag':(m.flags.nsfw?'NSFW flag':'clean')});
-  var bad=m.abilities.filter(function(a){return ALLOWED_ABIL.indexOf(a)<0;});
-  out.push({name:'ability sanity', ok:bad.length===0, r:bad.length?'banned ability: '+bad.join(','):(m.abilities.length?m.abilities.join(', '):'none')});
+  var known=UNIVERSAL.concat(REALM_BOUND),unknown=m.abilities.filter(function(a){return known.indexOf(a)<0;}),bound=m.abilities.filter(function(a){return REALM_BOUND.indexOf(a)>=0;});
+  m.scope=bound.length?'owner-realm':'universal';
+  out.push({name:'ability scope', ok:unknown.length===0, r:unknown.length?'unknown/exploit ability: '+unknown.join(','):(bound.length?bound.join(',')+' → realm-scoped (paid realm only)':(m.abilities.length?m.abilities.join(','):'none'))});
   m.checks=out;m.certified=out.every(function(c){return c.ok;});
   return m;
 }
@@ -153,11 +158,23 @@ function loadMod(m){
     if(m.trust>=o.trust){worn[m.slot]=m.id;unmount(o.id);mount(m);
       setBanner('⚠ slot conflict on <b>'+m.slot.toUpperCase()+'</b>: '+o.name+' ('+o.author+') vs '+m.name+' ('+m.author+') → resolved: kept <b>'+m.name+'</b> (trust '+m.trust+'≥'+o.trust+'). Both authors notified.','warn');}
     else{setBanner('⚠ slot conflict on <b>'+m.slot.toUpperCase()+'</b>: kept '+o.name+' (trust '+o.trust+'>'+m.trust+'). '+m.name+' queued.','warn');refreshCertified();return;}
-  } else { worn[m.slot]=m.id;mount(m);setBanner('✓ loaded <b>'+m.name+'</b> ('+m.author+') — composes with '+(activeCount()-1)+' other certified mod(s).','ok'); }
+  } else { worn[m.slot]=m.id;mount(m);
+    if(m.scope==='owner-realm')updateRealmBanner();
+    else setBanner('✓ loaded <b>'+m.name+'</b> ('+m.author+') — composes with '+(activeCount()-1)+' other certified mod(s).','ok'); }
   refreshCertified();updateManifest();
 }
 function byId(id){for(var i=0;i<MODS.length;i++)if(MODS[i].id===id)return MODS[i];}
 function activeCount(){return Object.keys(mounted).length;}
+
+/* realm context: powers are sovereign in your paid realm, gated in shared realms */
+var realm='shared';
+function realmScopedLoaded(){var o=[];for(var id in mounted){var m=byId(id);if(m&&m.scope==='owner-realm')o.push(m);}return o;}
+function updateRealmBanner(){var rs=realmScopedLoaded();if(!rs.length)return false;var nm=rs.map(function(m){return m.name+' ('+m.abilities.join(',')+')';}).join(', ');
+  if(realm==='own')setBanner('🏰 <b>Your paid realm</b> — '+nm+': power <b style="color:var(--ok)">ACTIVE</b>. Your realm, your rules.','ok');
+  else setBanner('🌐 <b>Shared realm</b> — '+nm+': power <b style="color:var(--warn)">SUPPRESSED</b> for fair play (cosmetic here; full power only in your paid realm).','warn');
+  return true;}
+function setRealm(r){realm=r;var s=document.getElementById('realmShared'),o=document.getElementById('realmOwn');if(s)s.classList.toggle('on',r==='shared');if(o)o.classList.toggle('on',r==='own');
+  if(!updateRealmBanner())setBanner(r==='own'?'🏰 Your paid realm — sovereign: every certified power is allowed here.':'🌐 Shared realm — the realm ruleset governs powers for fair play.',r==='own'?'ok':'');}
 
 /* ---- UI ---- */
 function badge(m){return m.certified==null?'<span class="st pend">pending</span>':(m.certified?'<span class="st cert">certified</span>':'<span class="st block">blocked</span>');}
@@ -178,6 +195,8 @@ document.getElementById('runBtn').onclick=function(){
     forensic(MODS[idx]);idx++;renderQueue();setTimeout(step,180);})();
 };
 renderQueue();updateManifest();
+document.getElementById('realmShared').onclick=function(){setRealm('shared');};
+document.getElementById('realmOwn').onclick=function(){setRealm('own');};
 
 /* ---- render ---- */
 var companionT=0;

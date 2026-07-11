@@ -126,6 +126,12 @@ world, and what makes "big brother plays with young brother" real.
   identity, signed credentials, ownership on a real ledger. *(backend + legal —
   the serious compliance work; the demo proves the model, not the infra)*
 
+- [x] **F5. Realm-scoped powers (sovereign paid realms).** — in `modbench.html`:
+  godmode/fly/etc *certify* as realm-scoped — ACTIVE in your paid realm, SUPPRESSED
+  in shared realms for fair play. Powers are context-gated, never globally banned.
+  Monetization + balance in one primitive: pay to be sovereign in your own realm.
+  Same scope-based gate as age (F1) and IP (districts) — generalized to abilities.
+
 > Cross-audience thesis: attestation is the bridge. Hardcore builds the edgy
 > content; the family-safe layer renders age-appropriate versions per attested
 > account. One world, two audiences, zero compromise — impossible without the
