@@ -75,3 +75,35 @@ trailer needs. Everything else can follow.
 > Dependencies worth knowing: A2/A3/A4 all sit on A1. B1 needs A4. C2 needs C1
 > (the only externally-blocked item). So the critical path is **A1 → A2 → A4 → B**,
 > all of which I can build now without waiting on hosting.
+
+---
+
+## THE THESIS (locked — this is what we optimize for)
+Not a game, not a Minecraft clone, not a graphics play. **A governed interop
+layer for user-made content** — anyone builds anything (wearables, companions,
+districts, abilities = "mods"), and the platform makes them **compose seamlessly**
+and safely. The moat is the interop standard + forensic governance + the network
+of creators. **Priority order: it works > it's interoperable > people feel like
+co-authors >>> visual polish.** Quality is nice-to-have, not the point.
+
+## TRACK E — Interop + Forensics + Co-builder loop  ← THE ACTUAL PRODUCT
+- [ ] **E1. The asset contract.** One schema every mod conforms to:
+  `{type, contentHash, slot/zone, perfBudget, deps, abilities?, bounds}`.
+  **DONE =** a documented contract any creator can target.
+- [ ] **E2. Forensic validation pass.** Submit-time checks that certify a mod:
+  hash/provenance, integrity, perf budget, schema conformance, **conflict
+  detection** vs other mods, NSFW/IP flags. Extends the gate.
+  **DONE =** a mod gets a pass/fail report with reasons (green-lights or blocks).
+- [ ] **E3. Seamless interop demo.** Two independently-authored mods loaded together,
+  each certified, shown coexisting with zero conflict (and a deliberate conflict
+  caught + resolved). **DONE =** "two strangers' mods just work together" on screen.
+- [ ] **E4. Contributor loop.** Submit → forensic certify → live in shared manifest
+  → "you built this" with attribution. **DONE =** the participation loop is visible
+  end-to-end. This is the retention/growth engine, not polish.
+- [ ] **E5. Forensic testing ground.** The Capital as the sandbox where the whole
+  toolchain (anti-cheat, integrity, moderation, conflict) runs against real chaos.
+
+> Reprioritization (per direction): TRACK A (AAA polish) drops to "pitch skin —
+> good enough, done in capital.html." TRACK E is now the core build. The demo that
+> matters next isn't prettier — it's **two mods interoperating under forensic
+> certification** (E2 + E3), because that's the thing no clone can copy.
