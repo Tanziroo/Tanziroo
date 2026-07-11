@@ -108,3 +108,25 @@ co-authors >>> visual polish.** Quality is nice-to-have, not the point.
 > good enough, done in capital.html." TRACK E is now the core build. The demo that
 > matters next isn't prettier — it's **two mods interoperating under forensic
 > certification** (E2 + E3), because that's the thing no clone can copy.
+
+## TRACK F — Attestation & Ownership (the trust root that wins BOTH audiences)
+Attestation ties it all together: verified identity/age → family-safe; verified
+ownership → item ledger + transfer. It's what lets hardcore + family share one
+world, and what makes "big brother plays with young brother" real.
+- [x] **F1. Age-attested family-safe view.** — delivered in `attest.html`: one
+  shared avatar, two attested viewers (Kai 17 / Robin 8); mature/teen cosmetics
+  auto-resolve to safe versions on the younger account. Same peer-view gate,
+  driven by an attested age credential.
+- [x] **F2. Attested ownership + free family transfer.** — delivered in
+  `attest.html`: per-item owner + rating, gift-within-family (free) writes a
+  signed attested transfer ledger. Social-graph-scoped transfer policy.
+- [ ] **F3. Extend transfer policy to guilds → market.** family(free) → guild
+  (rules) → public (marketplace). **DONE =** policy engine keyed on social graph.
+- [ ] **F4. Real attestation backend.** DOB/age verification (COPPA/GDPR-K),
+  identity, signed credentials, ownership on a real ledger. *(backend + legal —
+  the serious compliance work; the demo proves the model, not the infra)*
+
+> Cross-audience thesis: attestation is the bridge. Hardcore builds the edgy
+> content; the family-safe layer renders age-appropriate versions per attested
+> account. One world, two audiences, zero compromise — impossible without the
+> attestation root, which is exactly the moat.
