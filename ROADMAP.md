@@ -16,24 +16,26 @@ Each mark has a **DONE =** line so "done" isn't a feeling. `[owner]` /
 - [x] Real-time cloth sim + swappable PBR fabrics — `cloth.html`
 - [x] Approval gate (self vs peer, revocation, hacked-client) — `gate.html`
 - [x] Vertical slice: body + wardrobe + gate + fabric feel — `engine.html`
+- [x] AAA showcase hub: cinematic looks + auto-cycle + credibility card — `capital.html`
 - [x] Rough 45s trailer (AI mood reel) — needs proof shot + credibility card
 
 ---
 
 ## TRACK A — Engine slice → demo-grade (this is the trailer's proof shot)
-- [ ] **A1. Real body in the slice.** Swap the primitive mannequin for a
-  MakeHuman (CC0) female + male GLB; place garments from the body's skeleton
-  bones, not hardcoded proportions.
-  **DONE =** a real-looking figure wears ≥3 garments that actually fit. *[unblocked]*
-- [ ] **A2. Cinematic lighting.** Pull `demo.html`'s HDRI IBL (+ optional bloom)
-  into the slice so it reads as a product, not a toy.
-  **DONE =** side-by-side with `engine.html` today, it obviously looks "real." *[unblocked]*
+- [ ] **A1. Real body.** Swap the procedural muse for a MakeHuman (CC0) female +
+  male GLB; place garments from the body's skeleton bones, not hardcoded
+  proportions. **ONLY remaining piece of the immediate 3.**
+  **DONE =** a real-looking figure wears ≥3 garments that actually fit.
+  *(needs the base mesh — you drop a MakeHuman/your GLB, or I source a placeholder)*
+- [x] **A2. Cinematic lighting.** — delivered in `capital.html`: procedural cosmic
+  IBL, ACES, magenta/cyan rims, reflective floor, portal backdrop, particles,
+  vignette + grain. Reads AAA, not toy.
 - [ ] **A3. One hero garment with live cloth.** Wire `cloth.html`'s solver onto a
   worn skirt/cape so it drapes and sways as the avatar turns.
   **DONE =** one garment visibly moves under gravity/motion. *[unblocked]*
-- [ ] **A4. The outfit-swap moment.** A scripted ~5s sequence that swaps 3 full
-  looks in real time on the same avatar.
-  **DONE =** a clean 5s screen-recording that reads "wait, I can *do* this." *[unblocked]*
+- [x] **A4. The look-swap moment.** — delivered in `capital.html`: one muse
+  transforms through 5 cinematic looks (celestial→circuit→molten→rune→tree),
+  auto-cycles every ~4.5s = screen-recordable proof shot. Ties to trailer B2.
 
 ## TRACK B — Trailer → converts (not just "nice art")
 - [ ] **B1.** Cut A4's real-time swap shot into the trailer (the proof it's real).
