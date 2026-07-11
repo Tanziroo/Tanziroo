@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>THE CAPITAL · low-poly hub + black-hole transport</title>
+<style>
+:root{--ink:#f2eef8;--muted:#9c97b8;--accent:#ff2e88;--accent-2:#21d4fd;--line:#2a2740;}
+*{box-sizing:border-box;} html,body{margin:0;height:100%;background:#07060e;}
+body{color:var(--ink);font-family:'Trebuchet MS','Segoe UI',system-ui,sans-serif;overflow:hidden;-webkit-tap-highlight-color:transparent;}
+#scene{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;}
+#fade{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .5s ease;z-index:8;}
+#brand{position:fixed;top:14px;left:16px;z-index:5;}
+#brand h1{margin:0;font-size:20px;letter-spacing:3px;background:linear-gradient(90deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent;}
+#brand .s{font-size:11px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
+#loc{position:fixed;top:14px;right:16px;z-index:5;text-align:right;}
+#loc .tag{font-size:9px;letter-spacing:3px;color:var(--muted);}
+#loc .nm{font-size:16px;letter-spacing:3px;font-weight:700;text-transform:uppercase;}
+#hint{position:fixed;top:50%;left:0;right:0;transform:translateY(-50%);z-index:5;text-align:center;color:#cfc7e6;font-size:13px;letter-spacing:2px;pointer-events:none;text-shadow:0 0 12px #000;opacity:.9;}
+#dock{position:fixed;bottom:14px;left:0;right:0;z-index:5;display:flex;gap:7px;justify-content:center;flex-wrap:wrap;padding:0 12px;}
+#dock button{background:#191627cc;color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:8px 12px;font:inherit;font-size:12px;cursor:pointer;backdrop-filter:blur(6px);}
+#dock button:hover{border-color:var(--accent-2);}
+#dock button.home{border-color:var(--accent);}
+#dock button.slot{border-style:dashed;color:#37d67a;border-color:#37d67a;}
+#foot{position:fixed;bottom:2px;left:0;right:0;z-index:5;text-align:center;font-size:9px;letter-spacing:2px;color:#4d4863;}
+#boot{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#07060e;color:#9c97b8;z-index:50;letter-spacing:2px;}
+</style>
+</head>
+<body>
+<canvas id="scene"></canvas>
+<div id="fade"></div>
+<div id="brand"><h1>⛧ THE CAPITAL</h1><div class="s">low-poly hub · black-hole transport</div></div>
+<div id="loc"><div class="tag">LOCATION</div><div class="nm" id="locName">CAPITAL CITY</div></div>
+<div id="hint">tap a black hole to transport ↑</div>
+<div id="dock"></div>
+<div id="foot">ENGINE TESTING GROUNDS · CLAUDE × GROK BUILD</div>
+<div id="boot">rendering the capital…</div>
+
+<script>
+(function(){function ls(u,d){var i=0;(function n(){if(i>=u.length){d(new Error('cdn'));return;}var s=document.createElement('script');s.src=u[i++];s.onload=function(){d(null);};s.onerror=n;document.head.appendChild(s);})();}
+  ls(['https://unpkg.com/three@0.147.0/build/three.min.js','https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js','https://cdnjs.cloudflare.com/ajax/libs/three.js/0.147.0/three.min.js'],function(e){
+    if(e||!window.THREE){document.getElementById('boot').textContent='couldn\'t load the engine.';return;}
+    ls(['https://unpkg.com/three@0.147.0/examples/js/controls/OrbitControls.js','https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js'],function(){var b=document.getElementById('boot');if(b)b.remove();start();});
+  });})();
+
+function start(){
+"use strict";
+if(typeof THREE.OrbitControls!=='function'){THREE.OrbitControls=function(c){this.target=new THREE.Vector3();this.update=function(){};};}
+var canvas=document.getElementById('scene');
+var renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;
+renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+var scene=new THREE.Scene();scene.fog=new THREE.FogExp2(0x07060e,0.010);
+var camera=new THREE.PerspectiveCamera(45,1,0.1,400);camera.position.set(16,12,20);
+var controls=new THREE.OrbitControls(camera,canvas);controls.target.set(0,5,0);controls.enableDamping=true;controls.dampingFactor=0.07;controls.autoRotate=true;controls.autoRotateSpeed=0.5;controls.minDistance=8;controls.maxDistance=60;controls.maxPolarAngle=Math.PI*0.49;controls.enablePan=false;
+
+/* lights */
+var hemi=new THREE.HemisphereLight(0x8f9bd6,0x0b0916,0.7);scene.add(hemi);
+var sun=new THREE.DirectionalLight(0xffe6c0,2.2);sun.position.set(20,30,10);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.near=1;sun.shadow.camera.far=120;sun.shadow.camera.left=-40;sun.shadow.camera.right=40;sun.shadow.camera.top=40;sun.shadow.camera.bottom=-40;sun.shadow.bias=-0.0005;scene.add(sun);
+var accent=new THREE.PointLight(0xff2e88,60,60,2);accent.position.set(0,18,0);scene.add(accent);
+
+/* stars + a distant black hole in the sky */
+var sg=new THREE.BufferGeometry(),sp=new Float32Array(1200*3);for(var i=0;i<1200;i++){var r=120+Math.random()*120,a=Math.random()*6.28,ph=Math.acos(2*Math.random()-1);sp[i*3]=r*Math.sin(ph)*Math.cos(a);sp[i*3+1]=Math.abs(r*Math.cos(ph))*0.6+20;sp[i*3+2]=r*Math.sin(ph)*Math.sin(a);}sg.setAttribute('position',new THREE.BufferAttribute(sp,3));
+scene.add(new THREE.Points(sg,new THREE.PointsMaterial({color:0xbfd8ff,size:0.7,sizeAttenuation:true,transparent:true,opacity:0.8})));
+function bhTex(a){var s=256,c=document.createElement('canvas');c.width=c.height=s;var x=c.getContext('2d');x.clearRect(0,0,s,s);var g=x.createRadialGradient(128,128,10,128,128,128);g.addColorStop(0,'rgba(0,0,0,1)');g.addColorStop(.34,'rgba(4,2,10,1)');g.addColorStop(.44,a);g.addColorStop(.62,'rgba(60,30,120,.4)');g.addColorStop(1,'rgba(7,6,14,0)');x.fillStyle=g;x.beginPath();x.arc(128,128,128,0,7);x.fill();return new THREE.CanvasTexture(c);}
+var skyBH=new THREE.Mesh(new THREE.PlaneGeometry(70,70),new THREE.MeshBasicMaterial({map:bhTex('rgba(255,120,40,.95)'),transparent:true,depthWrite:false,fog:false,blending:THREE.AdditiveBlending}));skyBH.position.set(-40,55,-90);scene.add(skyBH);
+
+/* low-poly material helper (flat-shaded = the house style) */
+function lp(color,rough,em){var m=new THREE.MeshStandardMaterial({color:color,roughness:rough==null?0.9:rough,metalness:0.0,flatShading:true});if(em){m.emissive=new THREE.Color(em);m.emissiveIntensity=1;}return m;}
+function box(w,h,d,m){return new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);}
+function prism(rt,rb,h,sides,m){return new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,sides),m);}
+
+/* everything swappable lives under sceneRoot */
+var sceneRoot=new THREE.Group();scene.add(sceneRoot);
+var portals=[];        // clickable black holes (only in the Capital)
+var raycaster=new THREE.Raycaster(), pointer=new THREE.Vector2();
+
+/* ---- WORLDS reachable through the black holes ---- */
+var WORLDS=[
+  {name:'Wyrd Hollow', accent:0x9b6cff, ground:0x241a3a, slot:false},
+  {name:'Brickhaven', accent:0xffc93c, ground:0x3a2a12, slot:false},
+  {name:'Neon Souk', accent:0x21d4fd, ground:0x0e2230, slot:false},
+  {name:'Your IP Here', accent:0x37d67a, ground:0x12241a, slot:true}
+];
+
+function clearRoot(){for(var i=sceneRoot.children.length-1;i>=0;i--){var o=sceneRoot.children[i];o.traverse(function(n){if(n.geometry)n.geometry.dispose();if(n.material){(Array.isArray(n.material)?n.material:[n.material]).forEach(function(m){if(m.map)m.map.dispose();m.dispose();});}});sceneRoot.remove(o);}portals=[];}
+
+function ground(color,r){var g=new THREE.Mesh(new THREE.CylinderGeometry(r,r,1.5,7),lp(color,1));g.position.y=-0.75;g.receiveShadow=true;return g;}
+
+/* ---- THE CAPITAL: ring of low-poly towers + central Spire + orbiting portals ---- */
+function buildCapital(){
+  sceneRoot.add(ground(0x14121f,34));
+  var palette=[0x3a3556,0x4a2a5e,0x2a3a5e,0x5e2a44,0x2f4a4a];
+  // city ring
+  for(var k=0;k<28;k++){var a=k/28*Math.PI*2,rad=11+Math.random()*16,h=3+Math.random()*11,sides=(Math.random()<0.5?4:6),rr=0.8+Math.random()*1.6;
+    var t=prism(rr*0.7,rr,h,sides,lp(palette[k%palette.length],0.85));t.position.set(Math.cos(a)*rad,h/2,Math.sin(a)*rad);t.rotation.y=Math.random()*3;t.castShadow=true;t.receiveShadow=true;sceneRoot.add(t);
+    if(Math.random()<0.6){var cap=prism(0,rr*0.9,rr*1.6,sides,lp(0x21d4fd,0.5,0x123a4a));cap.position.set(t.position.x,h+rr*0.8,t.position.z);cap.rotation.y=t.rotation.y;sceneRoot.add(cap);}}
+  // central SPIRE — the pinnacle: stacked shrinking hex prisms + glowing crown
+  var spire=new THREE.Group();var segs=8,y=0;for(var s=0;s<segs;s++){var rr2=3.2-s*0.34,hh=3.2;var seg=prism(rr2*0.82,rr2,hh,6,lp(s%2?0x2a2444:0x352c58,0.7));seg.position.y=y+hh/2;seg.castShadow=true;seg.receiveShadow=true;spire.add(seg);y+=hh;}
+  var crown=new THREE.Mesh(new THREE.OctahedronGeometry(1.5,0),lp(0xff2e88,0.3,0xff2e88));crown.position.y=y+1.2;crown.castShadow=true;spire.add(crown);
+  var beacon=new THREE.PointLight(0xff2e88,40,30,2);beacon.position.y=y+1.2;spire.add(beacon);
+  sceneRoot.add(spire);
+  // black-hole portals orbiting the spire's upper third — the doors to the worlds
+  WORLDS.forEach(function(w,i){var a=i/WORLDS.length*Math.PI*2, R=9, PY=16;
+    var ring=new THREE.Group();
+    var torus=new THREE.Mesh(new THREE.TorusGeometry(1.7,0.32,8,7),lp(w.accent,0.35,w.accent));
+    var hole=new THREE.Mesh(new THREE.CircleGeometry(1.55,7),new THREE.MeshBasicMaterial({map:bhTex('rgba('+((w.accent>>16)&255)+','+((w.accent>>8)&255)+','+(w.accent&255)+',.95)'),transparent:true,depthWrite:false,fog:false,blending:THREE.AdditiveBlending}));
+    hole.position.z=-0.05;ring.add(torus,hole);ring.position.set(Math.cos(a)*R,PY,Math.sin(a)*R);ring.lookAt(0,PY,0);
+    ring.userData={world:i,spin:0.4+Math.random()*0.4};ring.traverse(function(n){if(n.isMesh&&n.geometry.type==='TorusGeometry')portals.push(n);});portals.push(torus);torus.userData.world=i;hole.userData.world=i;portals.push(hole);
+    sceneRoot.add(ring);ring.userData.torus=torus;});
+  setLoc('CAPITAL CITY');document.getElementById('hint').style.display='';
+}
+
+/* ---- a black-hole WORLD (simple themed low-poly destination) ---- */
+function buildWorld(i){
+  var w=WORLDS[i];sceneRoot.add(ground(w.ground,30));
+  accent.color.setHex(w.accent);sun.color.setHex(0xfff0d8);
+  if(w.slot){
+    // an empty plot — the "your IP here" vendor slot, dashed footprint + build prompt
+    var ringGeo=new THREE.TorusGeometry(9,0.15,6,40);var plot=new THREE.Mesh(ringGeo,lp(w.accent,0.4,w.accent));plot.rotation.x=Math.PI/2;plot.position.y=0.1;sceneRoot.add(plot);
+    var post;for(var p=0;p<8;p++){var pa=p/8*Math.PI*2;post=box(0.4,3,0.4,lp(w.accent,0.5,w.accent));post.position.set(Math.cos(pa)*9,1.5,Math.sin(pa)*9);sceneRoot.add(post);}
+    var pedestal=prism(2,2.6,1.2,6,lp(0x222,0.8));pedestal.position.y=0.6;sceneRoot.add(pedestal);
+    var q=new THREE.Mesh(new THREE.OctahedronGeometry(1.4,0),lp(w.accent,0.3,w.accent));q.position.y=3;q.castShadow=true;sceneRoot.add(q);
+  } else {
+    // a cluster of themed low-poly structures
+    var pal=[w.accent,0x2a2440,0x1a1830];
+    for(var k=0;k<16;k++){var a=Math.random()*6.28,rad=Math.random()*16,h=2+Math.random()*10,sides=(w.name==='Brickhaven'?4:(w.name==='Neon Souk'?4:6));
+      var col=(Math.random()<0.35)?w.accent:pal[1+((Math.random()*2)|0)];
+      var t=prism((w.name==='Brickhaven'?1:0.6),1.2,h,sides,lp(col,0.85,(col===w.accent?w.accent:null)));
+      t.position.set(Math.cos(a)*rad,h/2,Math.sin(a)*rad);t.rotation.y=Math.random()*3;t.castShadow=true;t.receiveShadow=true;sceneRoot.add(t);}
+    // a landmark obelisk
+    var mark=prism(0,2.2,14,(w.name==='Neon Souk'?4:6),lp(w.accent,0.4,w.accent));mark.position.y=7;mark.castShadow=true;sceneRoot.add(mark);
+  }
+  // a single return-portal back to the Capital
+  var back=new THREE.Group();var bt=new THREE.Mesh(new THREE.TorusGeometry(1.7,0.32,8,7),lp(0xff2e88,0.35,0xff2e88));var bh=new THREE.Mesh(new THREE.CircleGeometry(1.55,7),new THREE.MeshBasicMaterial({map:bhTex('rgba(255,46,136,.95)'),transparent:true,depthWrite:false,fog:false,blending:THREE.AdditiveBlending}));bh.position.z=-0.05;back.add(bt,bh);back.position.set(0,7,-14);back.userData={home:true};bt.userData.home=true;bh.userData.home=true;portals.push(bt,bh);back.userData.torus=bt;sceneRoot.add(back);
+  setLoc(w.name.toUpperCase());document.getElementById('hint').style.display='none';
+}
+
+/* ---- transport (fade → rebuild → fade) ---- */
+var busy=false, atCapital=true;
+var fadeEl=document.getElementById('fade');
+function transport(fn){if(busy)return;busy=true;fadeEl.style.opacity=1;setTimeout(function(){clearRoot();fn();camera.position.set(16,11,20);controls.target.set(0,5,0);fadeEl.style.opacity=0;setTimeout(function(){busy=false;},450);},520);}
+function goWorld(i){atCapital=false;transport(function(){buildWorld(i);});setDock();}
+function goHome(){atCapital=true;transport(function(){buildCapital();});setDock();}
+function setLoc(n){document.getElementById('locName').textContent=n;}
+
+/* pointer picking on portals */
+function onTap(ev){if(busy)return;var t=ev.changedTouches?ev.changedTouches[0]:ev;var rect=canvas.getBoundingClientRect();pointer.x=((t.clientX-rect.left)/rect.width)*2-1;pointer.y=-((t.clientY-rect.top)/rect.height)*2+1;raycaster.setFromCamera(pointer,camera);var hit=raycaster.intersectObjects(portals,false)[0];if(hit){var u=hit.object.userData;if(u.home)goHome();else if(u.world!=null)goWorld(u.world);}}
+canvas.addEventListener('pointerup',onTap);
+
+/* dock: reliable transport chips (also works if a tap misses the ring) */
+function setDock(){var d=document.getElementById('dock');d.innerHTML='';
+  if(atCapital){WORLDS.forEach(function(w,i){var b=document.createElement('button');if(w.slot)b.className='slot';b.textContent='◍ '+w.name;b.onclick=function(){goWorld(i);};d.appendChild(b);});}
+  else{var h=document.createElement('button');h.className='home';h.textContent='⌂ return to Capital';h.onclick=goHome;d.appendChild(h);}}
+
+buildCapital();setDock();
+
+/* render */
+var clock=new THREE.Clock();
+function resize(){var w=canvas.clientWidth,h=canvas.clientHeight;if(w&&h&&(canvas.width!==w||canvas.height!==h)){renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}}
+function frame(){requestAnimationFrame(frame);var dt=clock.getDelta(),t=clock.elapsedTime;
+  sceneRoot.traverse(function(o){if(o.userData&&o.userData.torus){o.userData.torus.rotation.z+=dt*(o.userData.spin||0.5);var pu=1+Math.sin(t*2+o.position.x)*0.06;o.userData.torus.scale.setScalar(pu);}});
+  skyBH.lookAt(camera.position);
+  resize();controls.update();renderer.render(scene,camera);
+}
+frame();
+}
+</script>
+</body>
+</html>
