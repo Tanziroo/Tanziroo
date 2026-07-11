@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>MOD BENCH · forensic certification + interop</title>
+<style>
+:root{--bg:#0b0a10;--panel:#141220;--ink:#ece9f5;--muted:#9c97b8;--accent:#ff2e88;--accent-2:#21d4fd;--ok:#37d67a;--bad:#ff6b6b;--warn:#f5c451;--line:#2a2740;}
+*{box-sizing:border-box;} html,body{margin:0;height:100%;}
+body{background:var(--bg);color:var(--ink);font-family:'SFMono-Regular',Consolas,'Roboto Mono',monospace;overflow:hidden;-webkit-tap-highlight-color:transparent;}
+#app{display:grid;grid-template-columns:1fr 380px;height:100vh;height:100dvh;}
+#stage{position:relative;background:#08070d;} #view{width:100%;height:100%;display:block;touch-action:none;}
+#banner{position:absolute;top:10px;left:10px;right:10px;z-index:4;font-size:12px;padding:8px 11px;border-radius:8px;background:#141220dd;border:1px solid var(--line);backdrop-filter:blur(6px);min-height:34px;line-height:1.4;}
+#banner.ok{border-color:var(--ok);} #banner.warn{border-color:var(--warn);} #banner.bad{border-color:var(--bad);}
+#side{background:linear-gradient(180deg,#15121f,#0d0b14);border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0;}
+#side h1{margin:0;padding:12px 14px 4px;font-size:15px;letter-spacing:1px;background:linear-gradient(90deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent;}
+#side .sub{padding:0 14px 8px;font-size:10px;color:var(--muted);letter-spacing:.5px;border-bottom:1px solid var(--line);}
+#scroll{overflow-y:auto;flex:1;min-height:0;padding:10px 12px;}
+.rowlbl{font-size:9.5px;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted);margin:14px 2px 6px;}
+.rowlbl:first-child{margin-top:0;}
+.act{width:100%;background:#2a1636;color:#fff;border:1px solid var(--accent);border-radius:8px;padding:9px;font:inherit;font-size:12px;cursor:pointer;}
+.act:hover{background:#361a44;}
+.mod{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:8px 9px;margin-bottom:7px;}
+.mod .top{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.mod .nm{font-size:12.5px;font-weight:600;} .mod .au{font-size:10px;color:var(--accent-2);}
+.mod .meta{font-size:9.5px;color:var(--muted);margin-top:2px;}
+.st{font-size:9px;padding:2px 7px;border-radius:5px;border:1px solid;white-space:nowrap;}
+.st.pend{color:var(--muted);border-color:var(--muted);} .st.cert{color:var(--ok);border-color:var(--ok);} .st.block{color:var(--bad);border-color:var(--bad);}
+.checks{margin-top:7px;display:none;flex-direction:column;gap:2px;}
+.checks.show{display:flex;}
+.chk{font-size:10px;display:flex;gap:6px;} .chk .i{width:12px;} .chk.ok .i{color:var(--ok);} .chk.no .i{color:var(--bad);} .chk .r{color:var(--muted);}
+.load{background:#211d36;color:var(--ink);border:1px solid var(--line);border-radius:7px;padding:6px 9px;font:inherit;font-size:11px;cursor:pointer;margin:0 5px 5px 0;}
+.load:hover{border-color:var(--accent-2);} .load.on{border-color:var(--accent);background:#2a1636;color:#fff;}
+.load .au{color:var(--accent-2);font-size:9px;}
+#manifest{font-size:10px;color:var(--muted);line-height:1.7;} #manifest .sig{color:var(--ok);} #manifest .a{color:var(--accent-2);}
+#boot{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#0b0a10;color:#9c97b8;z-index:50;}
+@media (max-width:820px){#app{grid-template-columns:1fr;grid-template-rows:44vh 1fr;}#stage{order:-1;}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="stage"><canvas id="view"></canvas><div id="banner">Forensic mod bench — run certification, then load certified mods to test interop.</div></div>
+  <aside id="side">
+    <h1>⛧ MOD BENCH</h1>
+    <div class="sub">forensic certification · seamless interop</div>
+    <div id="scroll">
+      <button class="act" id="runBtn">▶ run forensic certification</button>
+      <div class="rowlbl">Submission queue — mods from many authors</div>
+      <div id="queue"></div>
+      <div class="rowlbl">Certified — load to test interop</div>
+      <div id="certified"><span style="font-size:10px;color:var(--muted)">run certification first</span></div>
+      <div class="rowlbl">Shared manifest (signed)</div>
+      <div id="manifest"></div>
+    </div>
+  </aside>
+</div>
+<div id="boot">loading mod bench…</div>
+
+<script>
+(function(){function ls(u,d){var i=0;(function n(){if(i>=u.length){d(new Error('cdn'));return;}var s=document.createElement('script');s.src=u[i++];s.onload=function(){d(null);};s.onerror=n;document.head.appendChild(s);})();}
+  ls(['https://unpkg.com/three@0.147.0/build/three.min.js','https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js','https://cdnjs.cloudflare.com/ajax/libs/three.js/0.147.0/three.min.js'],function(e){
+    if(e||!window.THREE){document.getElementById('boot').textContent='couldn\'t load three.';return;}
+    ls(['https://unpkg.com/three@0.147.0/examples/js/controls/OrbitControls.js','https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js'],function(){var b=document.getElementById('boot');if(b)b.remove();start();});
+  });})();
+
+function start(){
+"use strict";
+if(typeof THREE.OrbitControls!=='function'){THREE.OrbitControls=function(c){this.target=new THREE.Vector3();this.update=function(){};};}
+var P={ankleY:0.09,kneeY:0.52,hipY:0.96,waistY:1.07,chestY:1.27,shoulderY:1.44,neckY:1.50,headY:1.64,topY:1.74,legX:0.095,shoulderX:0.175,thighR:0.095,calfR:0.07,neckR:0.052,headR:0.10};
+var SKIN=new THREE.MeshStandardMaterial({color:0xe8c4a8,roughness:0.6}),HAIR=new THREE.MeshStandardMaterial({color:0x121016,roughness:0.55,metalness:0.05}),METAL=new THREE.MeshStandardMaterial({color:0xc9ccd1,roughness:0.3,metalness:1});
+function S(m){m.castShadow=true;m.receiveShadow=true;return m;}
+function mat(c,f){if(f==='leather')return new THREE.MeshStandardMaterial({color:c,roughness:0.24,metalness:0.15,side:THREE.DoubleSide});return new THREE.MeshStandardMaterial({color:c,roughness:0.8,side:THREE.DoubleSide});}
+function lathe(pts,m,seg){return S(new THREE.Mesh(new THREE.LatheGeometry(pts.map(function(p){return new THREE.Vector2(p[0],p[1]);}),seg||32),m));}
+
+/* ---- scene ---- */
+var canvas=document.getElementById('view');
+var renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true});renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));renderer.physicallyCorrectLights=true;renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+var scene=new THREE.Scene();scene.background=new THREE.Color(0x0b0a10);scene.fog=new THREE.Fog(0x0b0a10,3.5,10);
+var camera=new THREE.PerspectiveCamera(40,1,0.1,100);camera.position.set(0.4,1.15,2.7);
+var controls=new THREE.OrbitControls(camera,canvas);controls.target.set(0,1.0,0);controls.enableDamping=true;controls.autoRotate=true;controls.autoRotateSpeed=0.6;controls.minDistance=1.4;controls.maxDistance=5;controls.maxPolarAngle=Math.PI*0.9;
+scene.add(new THREE.HemisphereLight(0xbfb9e0,0x16121f,0.8));
+var key=new THREE.SpotLight(0xffffff,70,20,Math.PI/5,0.4,1.5);key.position.set(2.5,4.5,3.2);key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.bias=-0.0004;scene.add(key,key.target);
+scene.add(Object.assign(new THREE.PointLight(0xff2e88,32,12,2),{position:new THREE.Vector3(-2.4,1.6,-1.3)}));
+scene.add(Object.assign(new THREE.PointLight(0x21d4fd,28,12,2),{position:new THREE.Vector3(2.4,1.5,-1.7)}));
+var floor=new THREE.Mesh(new THREE.CircleGeometry(3,48),new THREE.MeshStandardMaterial({color:0x111018,roughness:0.4,metalness:0.5}));floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);
+var body=new THREE.Group();(function(){
+  body.add(lathe([[0.155,P.hipY-0.04],[0.168,P.hipY+0.02],[0.150,P.hipY+0.07],[0.122,P.waistY],[0.135,P.waistY+0.08],[0.156,P.chestY-0.02],[0.150,P.chestY+0.05],[0.105,P.shoulderY-0.03],[0.070,P.neckY-0.02],[0.056,P.neckY+0.02]],SKIN,44));
+  var pel=S(new THREE.Mesh(new THREE.SphereGeometry(0.155,26,18),SKIN));pel.position.set(0,P.hipY-0.05,0);pel.scale.set(1,0.7,0.85);body.add(pel);
+  var neck=S(new THREE.Mesh(new THREE.CylinderGeometry(P.neckR,P.neckR+0.01,0.09,16),SKIN));neck.position.set(0,P.neckY+0.05,0);body.add(neck);
+  var head=S(new THREE.Mesh(new THREE.SphereGeometry(P.headR,32,24),SKIN));head.position.set(0,P.headY,0);head.scale.set(0.92,1.08,0.95);body.add(head);
+  var hb=S(new THREE.Mesh(new THREE.SphereGeometry(P.headR+0.02,24,18),HAIR));hb.position.set(0,P.headY+0.01,-0.01);hb.scale.set(1.05,1.18,1.05);body.add(hb);
+  [-1,1].forEach(function(s){var th=S(new THREE.Mesh(new THREE.CapsuleGeometry(P.thighR,0.34,10,16),SKIN));th.position.set(s*P.legX,(P.hipY+P.kneeY)/2+0.02,0);body.add(th);var ca=S(new THREE.Mesh(new THREE.CapsuleGeometry(P.calfR,0.32,10,16),SKIN));ca.position.set(s*P.legX,(P.kneeY+P.ankleY)/2+0.02,0);body.add(ca);
+    var up=S(new THREE.Mesh(new THREE.CapsuleGeometry(0.045,0.26,10,16),SKIN));up.position.set(s*(P.shoulderX+0.02),P.shoulderY-0.16,0);up.rotation.z=s*0.15;body.add(up);var fo=S(new THREE.Mesh(new THREE.CapsuleGeometry(0.037,0.24,10,16),SKIN));fo.position.set(s*(P.shoulderX+0.075),P.shoulderY-0.44,0);fo.rotation.z=s*0.1;body.add(fo);});
+})();scene.add(body);
+
+/* ---- mod builders (procedural stand-ins for authored assets) ---- */
+function b_corset(c){var g=new THREE.Group();g.add(lathe([[0.170,P.hipY],[0.150,P.hipY+0.06],[0.130,P.waistY],[0.142,P.waistY+0.08],[0.162,P.chestY-0.02],[0.150,P.chestY+0.05]],mat(c,'leather'),32));return g;}
+function b_choker(c){var g=new THREE.Group();var b=S(new THREE.Mesh(new THREE.TorusGeometry(P.neckR+0.01,0.012,10,24),mat(c,'leather')));b.rotation.x=Math.PI/2;b.position.y=P.neckY+0.04;b.scale.set(1,1,0.85);g.add(b);for(var i=0;i<10;i++){var a=i/10*6.28,sp=S(new THREE.Mesh(new THREE.ConeGeometry(0.008,0.02,6),METAL));sp.position.set(Math.cos(a)*(P.neckR+0.012),P.neckY+0.04,Math.sin(a)*(P.neckR+0.012)*0.85);sp.lookAt(sp.position.clone().multiplyScalar(2));sp.rotateX(Math.PI/2);g.add(sp);}return g;}
+function b_halo(c){var g=new THREE.Group();var h=S(new THREE.Mesh(new THREE.TorusGeometry(0.13,0.014,10,28),new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:0.8,roughness:0.3,metalness:0.6})));h.rotation.x=Math.PI/2;h.position.y=P.topY+0.06;g.add(h);return g;}
+function b_circlet(c){var g=new THREE.Group();var h=S(new THREE.Mesh(new THREE.TorusGeometry(P.headR+0.01,0.012,8,24),new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:0.5,roughness:0.35,metalness:0.7})));h.rotation.x=Math.PI/2;h.position.y=P.headY+0.06;g.add(h);var st=S(new THREE.Mesh(new THREE.ConeGeometry(0.02,0.06,4),new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:0.7})));st.position.set(0,P.headY+0.14,P.headR*0.6);g.add(st);return g;}
+function b_wings(c){var g=new THREE.Group();[-1,1].forEach(function(s){var w=S(new THREE.Mesh(new THREE.BoxGeometry(0.02,0.4,0.28),new THREE.MeshStandardMaterial({color:c,transparent:true,opacity:0.55,roughness:0.5,side:THREE.DoubleSide})));w.position.set(s*0.14,P.chestY,-0.14);w.rotation.set(0.1,s*0.6,s*0.2);g.add(w);});return g;}
+function b_crown(c){var g=new THREE.Group();g.add(S(new THREE.Mesh(new THREE.TorusKnotGeometry(0.11,0.03,180,24),new THREE.MeshStandardMaterial({color:c,metalness:1,roughness:0.3}))).translateY(P.topY+0.05));return g;}
+function b_companion(c){var g=new THREE.Group();var bd=S(new THREE.Mesh(new THREE.SphereGeometry(0.09,16,14),new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:0.6,roughness:0.4})));g.add(bd);[-1,1].forEach(function(s){var w=S(new THREE.Mesh(new THREE.ConeGeometry(0.05,0.12,5),new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:0.4,transparent:true,opacity:0.7})));w.position.set(s*0.09,0,-0.02);w.rotation.z=s*1.2;g.add(w);});g.position.set(0.5,1.15,0.2);return g;}
+
+/* ---- the asset contract + budgets + forensic checks ---- */
+var TRIS_BUDGET=9000, TEX_BUDGET=2048, ALLOWED_ABIL=['emberflare','glow','sparkle','heal','trail'];
+function hash(s){var h=5381;for(var i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))>>>0;return h.toString(16);}
+function canon(m){return JSON.stringify({id:m.id,type:m.type,slot:m.slot,tris:m.tris});}
+var MODS=[
+  {id:'corset',author:'@nyx',name:'Void Corset',type:'wearable',slot:'torso',tris:2100,texKB:180,abilities:[],flags:{},trust:3,build:b_corset,color:0x4a0e16},
+  {id:'choker',author:'@rune',name:'Rune Choker',type:'wearable',slot:'neck',tris:900,texKB:60,abilities:[],flags:{},trust:3,build:b_choker,color:0x14131a},
+  {id:'sprite',author:'@kobo',name:'Ember Sprite',type:'companion',slot:'companion',tris:1400,texKB:120,abilities:['emberflare'],flags:{},trust:2,build:b_companion,color:0xff7a2e},
+  {id:'halo',author:'@lux',name:'Halo of Dawn',type:'wearable',slot:'head',tris:800,texKB:50,abilities:['glow'],flags:{},trust:3,build:b_halo,color:0xffd35b},
+  {id:'circlet',author:'@vega',name:'Star Circlet',type:'wearable',slot:'head',tris:700,texKB:48,abilities:[],flags:{},trust:2,build:b_circlet,color:0x9fd0ff},
+  {id:'megacrown',author:'@glit',name:'MegaCrown',type:'wearable',slot:'head',tris:82000,texKB:90,abilities:[],flags:{},trust:1,build:b_crown,color:0xffd35b},
+  {id:'rippr',author:'@xx0',name:'Ripp’r Tee',type:'wearable',slot:'torso',tris:1500,texKB:8000,abilities:[],flags:{ip:true},trust:1,build:b_corset,color:0x2a2a2a},
+  {id:'godhalo',author:'@troll',name:'Godmode Halo',type:'wearable',slot:'head',tris:600,texKB:40,abilities:['invuln'],flags:{},trust:1,build:b_halo,color:0xff2038},
+  {id:'copyfae',author:'@mim',name:'Copyfae Wings',type:'wearable',slot:'back',tris:1200,texKB:70,abilities:[],flags:{},trust:1,build:b_wings,color:0xcfe6ff,tamper:true}
+];
+// stamp content hashes: clean mods hash their canonical bytes; the tampered one carries a stale hash
+MODS.forEach(function(m){m.contentHash=m.tamper?'deadbeef01':hash(canon(m));});
+
+function forensic(m){
+  var out=[];
+  out.push({name:'provenance / hash', ok:hash(canon(m))===m.contentHash, r:m.tamper?'declared hash ≠ recomputed (tampered)':'signature matches bytes'});
+  var req=['id','author','type','slot','contentHash','tris','texKB'],miss=req.filter(function(k){return m[k]==null;});
+  out.push({name:'schema conformance', ok:miss.length===0, r:miss.length?'missing: '+miss.join(','):'contract fields valid'});
+  out.push({name:'perf budget', ok:m.tris<=TRIS_BUDGET&&m.texKB<=TEX_BUDGET, r:m.tris>TRIS_BUDGET?m.tris.toLocaleString()+' tris > '+TRIS_BUDGET.toLocaleString():(m.texKB>TEX_BUDGET?m.texKB+'KB tex > '+TEX_BUDGET+'KB':'within '+TRIS_BUDGET.toLocaleString()+' tris / '+TEX_BUDGET+'KB')});
+  out.push({name:'content policy', ok:!m.flags.ip&&!m.flags.nsfw, r:m.flags.ip?'IP-infringement flag':(m.flags.nsfw?'NSFW flag':'clean')});
+  var bad=m.abilities.filter(function(a){return ALLOWED_ABIL.indexOf(a)<0;});
+  out.push({name:'ability sanity', ok:bad.length===0, r:bad.length?'banned ability: '+bad.join(','):(m.abilities.length?m.abilities.join(', '):'none')});
+  m.checks=out;m.certified=out.every(function(c){return c.ok;});
+  return m;
+}
+
+/* ---- interop: load certified mods, catch + resolve cross-mod conflicts ---- */
+var worn={}, mounted={};   // slot -> modId ; modId -> group
+function setBanner(t,cls){var b=document.getElementById('banner');b.className='';if(cls)b.classList.add(cls);b.innerHTML=t;}
+function unmount(id){if(mounted[id]){body.remove(mounted[id]);mounted[id].traverse(function(n){if(n.geometry)n.geometry.dispose();if(n.material)(Array.isArray(n.material)?n.material:[n.material]).forEach(function(m){m.dispose();});});delete mounted[id];}}
+function mount(m){var g=m.build(m.color);mounted[m.id]=g;body.add(g);}
+function loadMod(m){
+  if(worn[m.slot]===m.id){worn[m.slot]=null;unmount(m.id);setBanner('unloaded '+m.name);refreshCertified();return;}
+  var occupant=worn[m.slot];
+  if(occupant&&occupant!==m.id){
+    var o=byId(occupant);
+    // CONFLICT: two certified mods want the same slot — resolve by trust, notify both
+    if(m.trust>=o.trust){worn[m.slot]=m.id;unmount(o.id);mount(m);
+      setBanner('⚠ slot conflict on <b>'+m.slot.toUpperCase()+'</b>: '+o.name+' ('+o.author+') vs '+m.name+' ('+m.author+') → resolved: kept <b>'+m.name+'</b> (trust '+m.trust+'≥'+o.trust+'). Both authors notified.','warn');}
+    else{setBanner('⚠ slot conflict on <b>'+m.slot.toUpperCase()+'</b>: kept '+o.name+' (trust '+o.trust+'>'+m.trust+'). '+m.name+' queued.','warn');refreshCertified();return;}
+  } else { worn[m.slot]=m.id;mount(m);setBanner('✓ loaded <b>'+m.name+'</b> ('+m.author+') — composes with '+(activeCount()-1)+' other certified mod(s).','ok'); }
+  refreshCertified();updateManifest();
+}
+function byId(id){for(var i=0;i<MODS.length;i++)if(MODS[i].id===id)return MODS[i];}
+function activeCount(){return Object.keys(mounted).length;}
+
+/* ---- UI ---- */
+function badge(m){return m.certified==null?'<span class="st pend">pending</span>':(m.certified?'<span class="st cert">certified</span>':'<span class="st block">blocked</span>');}
+function renderQueue(){var q=document.getElementById('queue');q.innerHTML='';MODS.forEach(function(m){
+  var d=document.createElement('div');d.className='mod';
+  var checks=m.checks?'<div class="checks show">'+m.checks.map(function(c){return '<div class="chk '+(c.ok?'ok':'no')+'"><span class="i">'+(c.ok?'✓':'✗')+'</span><span>'+c.name+'</span><span class="r">— '+c.r+'</span></div>';}).join('')+'</div>':'';
+  d.innerHTML='<div class="top"><div><span class="nm">'+m.name+'</span> <span class="au">'+m.author+'</span><div class="meta">'+m.type+' · '+m.slot+' · '+m.tris.toLocaleString()+' tris · '+m.texKB+'KB · #'+m.contentHash+'</div></div>'+badge(m)+'</div>'+checks;
+  q.appendChild(d);});}
+function refreshCertified(){var c=document.getElementById('certified');var cert=MODS.filter(function(m){return m.certified;});
+  if(!cert.length){c.innerHTML='<span style="font-size:10px;color:var(--muted)">run certification first</span>';return;}
+  c.innerHTML='';cert.forEach(function(m){var b=document.createElement('button');b.className='load'+(worn[m.slot]===m.id?' on':'');b.innerHTML=(worn[m.slot]===m.id?'◉ ':'○ ')+m.name+' <span class="au">'+m.author+'</span>';b.onclick=function(){loadMod(m);};c.appendChild(b);});}
+function updateManifest(){var cert=MODS.filter(function(m){return m.certified;});var ids=cert.map(function(m){return m.id;}).sort();
+  document.getElementById('manifest').innerHTML='certified <b>'+cert.length+'</b>/'+MODS.length+' · <span class="sig">sig '+hash(ids.join(','))+'</span><br>'+cert.map(function(m){return '<span class="a">'+m.author+'</span> · '+m.name+(worn[m.slot]===m.id?' <span style="color:var(--ok)">◉ live</span>':'');}).join('<br>');}
+
+document.getElementById('runBtn').onclick=function(){
+  this.textContent='▶ certifying…';var self=this;var idx=0;
+  (function step(){if(idx>=MODS.length){self.textContent='▶ re-run certification';var pass=MODS.filter(function(m){return m.certified;}).length;setBanner('Forensic pass complete: <b>'+pass+' certified</b>, <b>'+(MODS.length-pass)+' blocked</b>. Load certified mods below to test interop.','ok');refreshCertified();updateManifest();return;}
+    forensic(MODS[idx]);idx++;renderQueue();setTimeout(step,180);})();
+};
+renderQueue();updateManifest();
+
+/* ---- render ---- */
+var companionT=0;
+function resize(){var w=canvas.clientWidth,h=canvas.clientHeight;if(w&&h&&(canvas.width!==w||canvas.height!==h)){renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}}
+function frame(){requestAnimationFrame(frame);var t=performance.now()*0.001;
+  if(mounted['sprite']){mounted['sprite'].position.set(0.5+Math.sin(t)*0.05,1.15+Math.sin(t*2)*0.06,0.2+Math.cos(t)*0.05);mounted['sprite'].rotation.y=t;}
+  resize();controls.update();renderer.render(scene,camera);
+}
+frame();
+}
+</script>
+</body>
+</html>

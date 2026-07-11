@@ -87,19 +87,20 @@ of creators. **Priority order: it works > it's interoperable > people feel like
 co-authors >>> visual polish.** Quality is nice-to-have, not the point.
 
 ## TRACK E — Interop + Forensics + Co-builder loop  ← THE ACTUAL PRODUCT
-- [ ] **E1. The asset contract.** One schema every mod conforms to:
-  `{type, contentHash, slot/zone, perfBudget, deps, abilities?, bounds}`.
-  **DONE =** a documented contract any creator can target.
-- [ ] **E2. Forensic validation pass.** Submit-time checks that certify a mod:
-  hash/provenance, integrity, perf budget, schema conformance, **conflict
-  detection** vs other mods, NSFW/IP flags. Extends the gate.
-  **DONE =** a mod gets a pass/fail report with reasons (green-lights or blocks).
-- [ ] **E3. Seamless interop demo.** Two independently-authored mods loaded together,
-  each certified, shown coexisting with zero conflict (and a deliberate conflict
-  caught + resolved). **DONE =** "two strangers' mods just work together" on screen.
-- [ ] **E4. Contributor loop.** Submit → forensic certify → live in shared manifest
-  → "you built this" with attribution. **DONE =** the participation loop is visible
-  end-to-end. This is the retention/growth engine, not polish.
+- [~] **E1. The asset contract.** — embodied in `modbench.html`:
+  `{id, author, type, slot, contentHash, tris, texKB, abilities, flags, trust}`.
+  Working schema mods conform to; still to do: write it up as public docs.
+- [x] **E2. Forensic validation pass.** — delivered in `modbench.html`: real
+  checks (provenance/hash, schema, perf budget, content policy, ability sanity)
+  run live per mod with pass/fail + reasons; 5 certify, 4 blocked (over-budget,
+  IP-flag, banned ability, tampered hash).
+- [x] **E3. Seamless interop demo.** — delivered in `modbench.html`: certified
+  mods from different authors compose on one avatar; a real HEAD slot conflict
+  (@lux Halo vs @vega Circlet) is caught and resolved by trust priority, both
+  authors notified — no crash, seamless.
+- [~] **E4. Contributor loop.** — partial in `modbench.html`: submit→certify→
+  signed shared manifest with per-author attribution + "◉ live" is visible.
+  Still to do: real submission UI + "you built this" moment end-to-end.
 - [ ] **E5. Forensic testing ground.** The Capital as the sandbox where the whole
   toolchain (anti-cheat, integrity, moderation, conflict) runs against real chaos.
 
