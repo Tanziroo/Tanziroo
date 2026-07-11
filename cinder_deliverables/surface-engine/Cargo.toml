@@ -1,0 +1,20 @@
+[package]
+name = "surface-engine"
+version = "0.1.0"
+edition = "2021"
+description = "Read-only entropy X-ray of a disk image/device: per-block Shannon entropy, texture classification, layer/boundary detection, and data-within-data anomaly triage. Cryptographically honest — never decrypts, never writes."
+
+[[bin]]
+name = "surface-engine"
+path = "src/main.rs"
+
+[dependencies]
+memmap2   = "0.9"          # read-only mmap of the image/device
+rayon     = "1"            # parallel per-block entropy
+serde     = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[profile.release]
+opt-level = 3
+lto       = "thin"
+strip     = true

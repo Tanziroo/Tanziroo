@@ -1,0 +1,3 @@
+# build + test artifacts — regenerable, never commit
+scribe_v03/scribe/target/
+scribe_v03/fixture/
