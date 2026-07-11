@@ -57,10 +57,12 @@ body{background:var(--bg);color:var(--ink);font-family:'SFMono-Regular',Consolas
 <div id="boot">loading mod bench…</div>
 
 <script>
+function showFatal(e){var d=document.getElementById('boot');if(!d){d=document.createElement('div');d.id='boot';document.body.appendChild(d);}d.style.cssText='position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#0b0a10;color:#ff6b9d;z-index:99;padding:24px;text-align:center;font:13px/1.6 monospace';d.textContent='mod bench error — tell Ryan: '+(e&&e.message||e);}
+window.addEventListener('error',function(ev){showFatal(ev.error||ev.message);});
 (function(){function ls(u,d){var i=0;(function n(){if(i>=u.length){d(new Error('cdn'));return;}var s=document.createElement('script');s.src=u[i++];s.onload=function(){d(null);};s.onerror=n;document.head.appendChild(s);})();}
   ls(['https://unpkg.com/three@0.147.0/build/three.min.js','https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js','https://cdnjs.cloudflare.com/ajax/libs/three.js/0.147.0/three.min.js'],function(e){
     if(e||!window.THREE){document.getElementById('boot').textContent='couldn\'t load three.';return;}
-    ls(['https://unpkg.com/three@0.147.0/examples/js/controls/OrbitControls.js','https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js'],function(){var b=document.getElementById('boot');if(b)b.remove();start();});
+    ls(['https://unpkg.com/three@0.147.0/examples/js/controls/OrbitControls.js','https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js'],function(){var b=document.getElementById('boot');if(b)b.remove();try{start();}catch(err){showFatal(err);}});
   });})();
 
 function start(){
@@ -72,9 +74,11 @@ function S(m){m.castShadow=true;m.receiveShadow=true;return m;}
 function mat(c,f){if(f==='leather')return new THREE.MeshStandardMaterial({color:c,roughness:0.24,metalness:0.15,side:THREE.DoubleSide});return new THREE.MeshStandardMaterial({color:c,roughness:0.8,side:THREE.DoubleSide});}
 function lathe(pts,m,seg){return S(new THREE.Mesh(new THREE.LatheGeometry(pts.map(function(p){return new THREE.Vector2(p[0],p[1]);}),seg||32),m));}
 
-/* ---- scene ---- */
-var canvas=document.getElementById('view');
-var renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true});renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));renderer.physicallyCorrectLights=true;renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+/* ---- scene (resilient: a 3D failure must never kill the forensic console) ---- */
+var render3D=false, canvas, renderer, scene, camera, controls, body;
+try{
+canvas=document.getElementById('view');
+renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true});renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));renderer.physicallyCorrectLights=true;renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 var scene=new THREE.Scene();scene.background=new THREE.Color(0x0b0a10);scene.fog=new THREE.Fog(0x0b0a10,3.5,10);
 var camera=new THREE.PerspectiveCamera(40,1,0.1,100);camera.position.set(0.4,1.15,2.7);
 var controls=new THREE.OrbitControls(camera,canvas);controls.target.set(0,1.0,0);controls.enableDamping=true;controls.autoRotate=true;controls.autoRotateSpeed=0.6;controls.minDistance=1.4;controls.maxDistance=5;controls.maxPolarAngle=Math.PI*0.9;
@@ -92,6 +96,8 @@ var body=new THREE.Group();(function(){
   [-1,1].forEach(function(s){var th=S(new THREE.Mesh(new THREE.CapsuleGeometry(P.thighR,0.34,10,16),SKIN));th.position.set(s*P.legX,(P.hipY+P.kneeY)/2+0.02,0);body.add(th);var ca=S(new THREE.Mesh(new THREE.CapsuleGeometry(P.calfR,0.32,10,16),SKIN));ca.position.set(s*P.legX,(P.kneeY+P.ankleY)/2+0.02,0);body.add(ca);
     var up=S(new THREE.Mesh(new THREE.CapsuleGeometry(0.045,0.26,10,16),SKIN));up.position.set(s*(P.shoulderX+0.02),P.shoulderY-0.16,0);up.rotation.z=s*0.15;body.add(up);var fo=S(new THREE.Mesh(new THREE.CapsuleGeometry(0.037,0.24,10,16),SKIN));fo.position.set(s*(P.shoulderX+0.075),P.shoulderY-0.44,0);fo.rotation.z=s*0.1;body.add(fo);});
 })();scene.add(body);
+render3D=true;
+}catch(_e3d){var _nb=document.getElementById('banner');if(_nb){_nb.style.borderColor='#ff6b6b';_nb.innerHTML='3D preview unavailable ('+(_e3d&&_e3d.message||_e3d)+') — the forensic console below still works.';}}
 
 /* ---- mod builders (procedural stand-ins for authored assets) ---- */
 function b_corset(c){var g=new THREE.Group();g.add(lathe([[0.170,P.hipY],[0.150,P.hipY+0.06],[0.130,P.waistY],[0.142,P.waistY+0.08],[0.162,P.chestY-0.02],[0.150,P.chestY+0.05]],mat(c,'leather'),32));return g;}
@@ -137,7 +143,7 @@ function forensic(m){
 var worn={}, mounted={};   // slot -> modId ; modId -> group
 function setBanner(t,cls){var b=document.getElementById('banner');b.className='';if(cls)b.classList.add(cls);b.innerHTML=t;}
 function unmount(id){if(mounted[id]){body.remove(mounted[id]);mounted[id].traverse(function(n){if(n.geometry)n.geometry.dispose();if(n.material)(Array.isArray(n.material)?n.material:[n.material]).forEach(function(m){m.dispose();});});delete mounted[id];}}
-function mount(m){var g=m.build(m.color);mounted[m.id]=g;body.add(g);}
+function mount(m){if(!render3D||!body)return;var g=m.build(m.color);mounted[m.id]=g;body.add(g);}
 function loadMod(m){
   if(worn[m.slot]===m.id){worn[m.slot]=null;unmount(m.id);setBanner('unloaded '+m.name);refreshCertified();return;}
   var occupant=worn[m.slot];
@@ -180,7 +186,7 @@ function frame(){requestAnimationFrame(frame);var t=performance.now()*0.001;
   if(mounted['sprite']){mounted['sprite'].position.set(0.5+Math.sin(t)*0.05,1.15+Math.sin(t*2)*0.06,0.2+Math.cos(t)*0.05);mounted['sprite'].rotation.y=t;}
   resize();controls.update();renderer.render(scene,camera);
 }
-frame();
+if(render3D)frame();
 }
 </script>
 </body>
