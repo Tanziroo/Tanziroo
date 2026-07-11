@@ -35,6 +35,12 @@ body{color:var(--ink);font-family:'Trebuchet MS','Segoe UI',system-ui,sans-serif
 #cta{position:fixed;bottom:calc(7vh + 16px);left:18px;z-index:5;font-size:12px;color:var(--muted);letter-spacing:1px;}
 #cta b{color:var(--accent-2);}
 #foot{position:fixed;bottom:9px;left:0;right:0;z-index:5;text-align:center;font-size:9px;letter-spacing:2px;color:#5a556e;}
+#district{position:fixed;top:calc(7vh + 60px);left:0;right:0;z-index:5;text-align:center;pointer-events:none;}
+#district .tag{font-size:9px;letter-spacing:3px;color:#05040a;background:var(--accent-2);padding:2px 8px;border-radius:4px;font-weight:700;vertical-align:middle;}
+#district #dName{font-size:14px;letter-spacing:4px;color:var(--ink);margin-left:9px;text-transform:uppercase;vertical-align:middle;}
+#district #dStatus{display:block;font-size:9px;letter-spacing:2px;color:var(--muted);margin-top:4px;}
+#district.slot .tag{background:var(--accent);color:#fff;}
+#district.slot #dName{color:#37d67a;}
 #boot{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#05040a;color:#9c97b8;z-index:50;letter-spacing:2px;}
 @media (max-width:680px){#brand h1{font-size:17px;}#look .nm{font-size:20px;letter-spacing:5px;}#cred .name{font-size:13px;}}
 </style>
@@ -44,6 +50,7 @@ body{color:var(--ink);font-family:'Trebuchet MS','Segoe UI',system-ui,sans-serif
 <div id="bars"></div><div id="vignette"></div><div id="grain"></div>
 <div id="brand" class="hud"><h1>⛧ THE CAPITAL</h1><div class="s">Crypt Engine · testing grounds</div></div>
 <div id="cred" class="hud"><div class="from">FROM</div><div class="name">RYAN CASHMAN</div><div class="titles" id="titles">[ shipped-title credits ]</div></div>
+<div id="district" class="hud"><span class="tag" id="dTag">LICENSED DISTRICT</span><span id="dName">—</span><span id="dStatus"></span></div>
 <div id="look"><div class="nm" id="lookName">—</div><div class="dots" id="dots"></div></div>
 <div id="ctes"><button id="bAuto" class="on">▮▮ auto</button><button id="bPrev">‹</button><button id="bNext">›</button></div>
 <div id="cta">wishlist · <b>the-capital.xyz</b></div>
@@ -85,6 +92,33 @@ var uplight=new THREE.PointLight(0xffffff,10,6,2);uplight.position.set(0,0.2,0.6
 
 /* reflective floor */
 var floor=new THREE.Mesh(new THREE.CircleGeometry(7,64),new THREE.MeshStandardMaterial({color:0x0a0912,roughness:0.18,metalness:0.85}));floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);
+
+/* ---- CAPITAL DISTRICTS: IP-licensed zones (the business model, made visible) ----
+   Placeholder district identities + an explicit "vendor slot" plot. Real IP
+   (Warner/Lego/etc.) leases a slot and their signed manifest governs the zone —
+   same gate as wearables, scoped to world-space. */
+var dLight=new THREE.PointLight(0x21d4fd,16,22,2);dLight.position.set(0,3.2,-6.5);scene.add(dLight);
+function buildings(x,W,H,acc,cap,dens){var bx=0;while(bx<W){var bw=40+Math.random()*110,bh=120+Math.random()*260,top=H-bh;x.fillStyle='#070510';x.fillRect(bx,top,bw,bh);
+  if(cap==='spire'){x.beginPath();x.moveTo(bx,top);x.lineTo(bx+bw/2,top-70-Math.random()*70);x.lineTo(bx+bw,top);x.closePath();x.fill();}
+  else if(cap==='block'){x.fillRect(bx+bw*0.18,top-34,bw*0.64,34);x.fillRect(bx+bw*0.34,top-60,bw*0.32,26);}
+  else if(cap==='market'){x.fillRect(bx-4,top-9,bw+8,9);}
+  x.fillStyle=acc;x.globalAlpha=0.9;for(var wy=top+16;wy<H-6;wy+=15)for(var wx=bx+7;wx<bx+bw-7;wx+=13){if(Math.random()<dens)x.fillRect(wx,wy,5,7);}x.globalAlpha=1;
+  bx+=bw+8+Math.random()*18;}}
+function plotSlot(x,W,H,acc){buildings(x,W*0.28,H,acc,'spire',0.2);x.save();x.translate(W*0.34,0);x.strokeStyle=acc;x.lineWidth=4;x.setLineDash([18,14]);x.strokeRect(20,H-300,W*0.32,290);x.setLineDash([]);x.fillStyle=acc;x.globalAlpha=0.6;x.font='bold 40px system-ui';x.textAlign='center';x.fillText('◇ PLOT FOR LEASE',W*0.16+20,H-150);x.globalAlpha=1;x.restore();x.save();x.translate(W*0.72,0);buildings(x,W*0.28,H,acc,'block',0.25);x.restore();}
+var DISTRICTS=[
+  {name:'Crypt Quarter', status:'HOME DISTRICT', accent:0xff2e88, draw:function(x,W,H,a){buildings(x,W,H,a,'spire',0.25);}},
+  {name:'Wyrd Hollow', status:'LEASED · vendor IP', accent:0x9b6cff, draw:function(x,W,H,a){buildings(x,W,H,a,'spire',0.32);}},
+  {name:'Brickhaven', status:'LEASED · vendor IP', accent:0xffc93c, draw:function(x,W,H,a){buildings(x,W,H,a,'block',0.42);}},
+  {name:'Neon Souk', status:'LEASED · vendor IP', accent:0x21d4fd, draw:function(x,W,H,a){buildings(x,W,H,a,'market',0.55);}},
+  {name:'◇ Your IP Here', status:'AVAILABLE · vendor slot', accent:0x37d67a, slot:true, draw:function(x,W,H,a){plotSlot(x,W,H,a);}}
+];
+var skyMat=new THREE.MeshBasicMaterial({transparent:true,side:THREE.BackSide,depthWrite:false,fog:true});
+var skyline=new THREE.Mesh(new THREE.CylinderGeometry(9,9,7,64,1,true),skyMat);skyline.position.y=3.5;scene.add(skyline);
+function skylineTex(d){var W=2048,H=512,c=document.createElement('canvas');c.width=W;c.height=H;var x=c.getContext('2d');x.clearRect(0,0,W,H);d.draw(x,W,H,'#'+d.accent.toString(16).padStart(6,'0'));var t=new THREE.CanvasTexture(c);t.wrapS=THREE.RepeatWrapping;t.wrapT=THREE.ClampToEdgeWrapping;t.repeat.set(2,1);return t;}
+var dcur=0;
+function setDistrict(i){dcur=(i+DISTRICTS.length)%DISTRICTS.length;var d=DISTRICTS[dcur];var old=skyMat.map;skyMat.map=skylineTex(d);skyMat.needsUpdate=true;if(old)old.dispose();dLight.color.setHex(d.accent);
+  document.getElementById('dName').textContent=d.name;document.getElementById('dStatus').textContent=d.status;document.getElementById('dTag').textContent=d.slot?'◇ VENDOR SLOT':'LICENSED DISTRICT';document.getElementById('district').classList.toggle('slot',!!d.slot);}
+setDistrict(0);
 
 /* cosmic portal backdrop (echoes the trailer's black-hole motif) — billboarded, always behind the muse */
 function portalTex(){var s=512,c=document.createElement('canvas');c.width=c.height=s;var x=c.getContext('2d');x.clearRect(0,0,s,s);var cx=s/2,cy=s/2;var g=x.createRadialGradient(cx,cy,s*0.05,cx,cy,s*0.5);g.addColorStop(0,'rgba(0,0,0,1)');g.addColorStop(0.30,'rgba(6,4,12,1)');g.addColorStop(0.40,'rgba(255,120,40,0.95)');g.addColorStop(0.46,'rgba(255,60,120,0.75)');g.addColorStop(0.60,'rgba(80,40,160,0.35)');g.addColorStop(0.80,'rgba(20,16,40,0.10)');g.addColorStop(1,'rgba(5,4,10,0)');x.fillStyle=g;x.beginPath();x.arc(cx,cy,s*0.5,0,7);x.fill();var t=new THREE.CanvasTexture(c);return t;}
@@ -145,7 +179,7 @@ function setLook(i){cur=(i+LOOKS.length)%LOOKS.length;target=LOOKS[cur];tgtColor
 var dotsEl=document.getElementById('dots');LOOKS.forEach(function(l,i){var b=document.createElement('button');b.className='dot';b.onclick=function(){setLook(i);auto=false;document.getElementById('bAuto').classList.remove('on');};dotsEl.appendChild(b);});
 setLook(0);
 // controls
-var auto=true, tAcc=0;
+var auto=true, tAcc=0, dAcc=0;
 document.getElementById('bAuto').onclick=function(){auto=!auto;this.classList.toggle('on',auto);};
 document.getElementById('bPrev').onclick=function(){setLook(cur-1);};
 document.getElementById('bNext').onclick=function(){setLook(cur+1);};
@@ -165,6 +199,8 @@ function frame(){requestAnimationFrame(frame);var dt=Math.min(clock.getDelta(),0
   gownMat.opacity+=(target.opacity-gownMat.opacity)*0.06;
   // auto-cycle looks (great for screen-recording the swap)
   if(auto){tAcc+=dt;if(tAcc>4.5){tAcc=0;setLook(cur+1);}}
+  // auto-tour districts (slower) — shows the Capital as sellable IP real estate
+  if(auto){dAcc+=dt;if(dAcc>9){dAcc=0;setDistrict(dcur+1);}}
   // keep the portal behind the muse from the camera's view, billboarded
   var dir=new THREE.Vector3().subVectors(controls.target,camera.position).setY(0).normalize();
   portal.position.set(controls.target.x+dir.x*4.5,1.5,controls.target.z+dir.z*4.5);portal.lookAt(camera.position);
