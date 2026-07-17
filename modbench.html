@@ -157,8 +157,8 @@ function loadMod(m){
     var o=byId(occupant);
     // CONFLICT: two certified mods want the same slot — resolve by trust, notify both
     if(m.trust>=o.trust){worn[m.slot]=m.id;unmount(o.id);mount(m);
-      setBanner('⚠ slot conflict on <b>'+m.slot.toUpperCase()+'</b>: '+o.name+' ('+o.author+') vs '+m.name+' ('+m.author+') → resolved: kept <b>'+m.name+'</b> (trust '+m.trust+'≥'+o.trust+'). Both authors notified.','warn');}
-    else{setBanner('⚠ slot conflict on <b>'+m.slot.toUpperCase()+'</b>: kept '+o.name+' (trust '+o.trust+'>'+m.trust+'). '+m.name+' queued.','warn');refreshCertified();return;}
+      setBanner('⚠ slot conflict on <b>'+m.slot.toUpperCase()+'</b>: '+o.name+' ('+o.author+') vs '+m.name+' ('+m.author+') → resolved: kept <b>'+m.name+'</b> (earned standing '+m.trust+'≥'+o.trust+'). Both authors notified.','warn');}
+    else{setBanner('⚠ slot conflict on <b>'+m.slot.toUpperCase()+'</b>: kept '+o.name+' (earned standing '+o.trust+'>'+m.trust+'). '+m.name+' queued.','warn');refreshCertified();return;}
   } else { worn[m.slot]=m.id;mount(m);
     if(m.scope==='owner-realm')updateRealmBanner();
     else setBanner('✓ loaded <b>'+m.name+'</b> ('+m.author+') — composes with '+(activeCount()-1)+' other certified mod(s).','ok'); }

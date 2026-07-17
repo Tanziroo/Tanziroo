@@ -53,6 +53,32 @@ breach the Capital floor: cannot harm a visitor, expose a visiting minor to gate
 content, host stolen IP, or ship an exploit. That one rule is why hardcore kingdoms
 and a visiting kid coexist safely: the sovereign feels free, the platform stays safe.
 
+## Earned privilege — the commons is not for sale
+Two things people conflate; only one is purchasable.
+- **Sovereignty in your OWN realm = purchasable.** Pay for your kingdom, be root
+  in it (godmode, local rules). It is *isolated* — bounded by Ring 0, affecting
+  only your space and consenting visitors. Buying this is fine.
+- **Standing in the COMMONS = earned, never bought.** Any elevated permission that
+  affects *other people's* experience — trust/priority, write access to shared
+  space, moderation authority, "elite" rank — is earned through a **time gate**
+  (tenure + verified contribution history, attested) and granted by **edict**
+  (a deliberate, revocable grant from an owner or the Capital). You cannot buy
+  status that governs others.
+
+**Why this is the only way to stay high-class:** the moment commons-standing can
+be purchased, the place collapses into pay-to-power and rank stops meaning
+anything. Earned-only standing creates real prestige, filters for proven long-term
+contributors over transient buyers, aligns incentives toward contribution, and
+keeps the shared world's tone in the hands of the earned, not the rich.
+
+Mechanics:
+- **Time gate** — privileges unlock with tenure + a verified contribution record.
+- **Edict** — an owner/authority (or the Capital) may grant or revoke standing
+  deliberately (sponsorship, promotion, appointment). Always revocable.
+- **Trust = earned standing.** The `trust` value that decides conflict priority
+  (`modbench.html`) is *earned reputation/history*, never a settable or
+  purchasable field. Sovereignty is bought; standing is earned.
+
 ## Mapping to the engine (what's already demonstrated)
 | Model layer | Built in |
 |---|---|
