@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>THE CAPITAL · demo index — the pitch walk</title>
+<style>
+:root{--bg:#0b0a10;--panel:#141220;--ink:#ece9f5;--muted:#9c97b8;--accent:#ff2e88;--accent-2:#21d4fd;--ok:#37d67a;--line:#2a2740;}
+*{box-sizing:border-box;} html,body{margin:0;min-height:100%;}
+body{background:radial-gradient(ellipse 80% 60% at 50% -10%,#1a1430 0%,#0b0a10 60%);color:var(--ink);font-family:'Trebuchet MS','Segoe UI',system-ui,sans-serif;padding:28px 16px 60px;}
+#wrap{max-width:760px;margin:0 auto;}
+header{text-align:center;margin-bottom:8px;}
+h1{margin:0;font-size:34px;letter-spacing:5px;background:linear-gradient(90deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent;}
+.tag{color:var(--muted);font-size:12px;letter-spacing:3px;text-transform:uppercase;margin-top:6px;}
+.cred{text-align:center;margin:18px 0 30px;font-size:13px;color:var(--muted);}
+.cred b{color:var(--ink);letter-spacing:2px;font-size:15px;}
+.cred .t{color:var(--accent-2);font-size:11px;}
+.thesis{background:#14122088;border:1px solid var(--line);border-radius:12px;padding:14px 18px;font-size:13.5px;line-height:1.65;color:#cfc7e6;margin-bottom:34px;}
+.thesis b{color:var(--ink);}
+.step{display:flex;gap:14px;margin-bottom:14px;text-decoration:none;color:inherit;background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:14px 16px;transition:.15s;}
+.step:hover{border-color:var(--accent);transform:translateY(-2px);}
+.n{font-size:22px;font-weight:700;color:var(--accent);min-width:30px;text-align:center;}
+.step h2{margin:0 0 3px;font-size:16px;letter-spacing:.5px;}
+.step .what{font-size:12.5px;color:var(--muted);line-height:1.5;}
+.step .why{font-size:11.5px;color:var(--accent-2);margin-top:5px;}
+.docs{margin-top:34px;border-top:1px solid var(--line);padding-top:18px;}
+.docs h3{font-size:11px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin:0 0 10px;}
+.docs a{display:inline-block;color:var(--accent-2);font-size:12.5px;margin:0 16px 8px 0;text-decoration:none;}
+.docs a:hover{text-decoration:underline;}
+footer{margin-top:36px;text-align:center;font-size:10px;letter-spacing:2px;color:#4d4863;}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <header><h1>⛧ THE CAPITAL</h1><div class="tag">a governed world where everything anyone builds — works together</div></header>
+  <div class="cred">FROM<br><b>RYAN CASHMAN</b><br><span class="t">[ shipped-title credits ]</span></div>
+
+  <div class="thesis">
+    <b>The pitch in one paragraph:</b> anyone builds anything — outfits, companions,
+    kingdoms, powers. Forensic certification proves every piece is safe; attestation
+    makes one world fit a 17-year-old and an 8-year-old at once; sovereign paid realms
+    make you root of your own kingdom while the Capital floor protects every visitor.
+    The demos below are live — walk them in order.
+  </div>
+
+  <a class="step" href="./capital.html"><div class="n">1</div><div>
+    <h2>The Capital — cinematic showcase</h2>
+    <div class="what">One muse transforming through five looks under the black-hole portal. The trailer's proof shot, running real-time in your browser.</div>
+    <div class="why">the lure — this is what shocks people into curiosity</div></div></a>
+
+  <a class="step" href="./world.html"><div class="n">2</div><div>
+    <h2>The World — hub, Spire, black-hole travel</h2>
+    <div class="what">Low-poly Capital City around the Spire; tap a black hole to transport to kingdoms — including an empty "Your IP Here" vendor plot.</div>
+    <div class="why">the reveal — the actual world model: hub → doors → realms</div></div></a>
+
+  <a class="step" href="./modbench.html"><div class="n">3</div><div>
+    <h2>Mod Bench — forensic certification + interop</h2>
+    <div class="what">Nine mods from nine authors run a live forensic pass (provenance, perf, policy, ability scope). Certified mods compose on one avatar; conflicts resolve by earned standing. Godmode certifies realm-scoped: active in your paid realm, suppressed in shared — and Ring 0 blocks stay blocked even for root.</div>
+    <div class="why">the moat — strangers' mods just work together, provably safe</div></div></a>
+
+  <a class="step" href="./attest.html"><div class="n">4</div><div>
+    <h2>Attest — one world, every age</h2>
+    <div class="what">Big brother (17) and little brother (8) view the same avatar: mature pieces auto-resolve to safe versions on the kid's attested account. Items transfer free inside the family on a signed ledger.</div>
+    <div class="why">the trust root — how hardcore and family share one world</div></div></a>
+
+  <a class="step" href="./engine.html"><div class="n">5</div><div>
+    <h2>Engine Slice — wardrobe + gate + fabric feel</h2>
+    <div class="what">Mix-and-match wardrobe with live peer-view inset: wear anything yourself; only approved renders to others. Recolor + swap fabric feel per garment.</div>
+    <div class="why">the product spine — self view vs world view, one screen</div></div></a>
+
+  <a class="step" href="./cloth.html"><div class="n">6</div><div>
+    <h2>Cloth Sim — real-time drape</h2>
+    <div class="what">An XPBD cloth solver draping over a body form, wind and all, with five swappable PBR fabrics — denim to satin.</div>
+    <div class="why">feasibility — the browser can carry real fabric feel</div></div></a>
+
+  <a class="step" href="./bench.html"><div class="n">7</div><div>
+    <h2>Perf Bench — LOD + stress-to-wall</h2>
+    <div class="what">Live fps/tris/draw-call HUD, 3-tier LOD, auto-ramp that duplicates figures until the framerate wall and reports the 60/30fps ceilings.</div>
+    <div class="why">engineering honesty — the cost/perf envelope, measured</div></div></a>
+
+  <div class="docs">
+    <h3>The written spine</h3>
+    <a href="./PERMISSIONS.md">PERMISSIONS.md — the three-ring / Linux model</a>
+    <a href="./ARCHITECTURE.md">ARCHITECTURE.md — ten modules + the now</a>
+    <a href="./ROADMAP.md">ROADMAP.md — marks & tracks</a>
+  </div>
+
+  <footer>ENGINE TESTING GROUNDS · CLAUDE × GROK BUILD</footer>
+</div>
+<script>
+/* When viewed through htmlpreview, plain relative links escape the previewer.
+   Rewrite demo links so the walk continues inside htmlpreview; leave .md links
+   pointing at the repo on GitHub. */
+(function(){
+  var here=location.href, m=here.match(/htmlpreview\.github\.io\/\?(.+)\/demos\.html/);
+  var base=m?m[1]:null;
+  var gh='https://github.com/Tanziroo/Tanziroo/blob/main/';
+  document.querySelectorAll('a').forEach(function(a){
+    var h=a.getAttribute('href')||'';
+    if(h.slice(0,2)!=='./')return;
+    var f=h.slice(2);
+    if(f.slice(-3)==='.md'){a.href=gh+f;return;}
+    if(base)a.href='https://htmlpreview.github.io/?'+base+'/'+f;
+  });
+})();
+</script>
+</body>
+</html>
