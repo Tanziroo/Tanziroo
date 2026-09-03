@@ -1,0 +1,12 @@
+{
+  "name": "the-capital",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A governed interop layer for user-made worlds — resolver, certification, and demo pages.",
+  "scripts": {
+    "test": "node src/resolver.test.cjs && node src/drift.test.cjs && node scripts/check-html.cjs",
+    "test:resolver": "node src/resolver.test.cjs",
+    "test:pages": "node scripts/check-html.cjs",
+    "test:drift": "node src/drift.test.cjs"
+  }
+}

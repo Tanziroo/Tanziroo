@@ -36,6 +36,12 @@ body{background:var(--bg);color:var(--ink);font-family:'SFMono-Regular',Consolas
 </style>
 </head>
 <body>
+<script>
+/* fail loud, never silent — surface any error instead of leaving a dead page */
+function showFatal(e){var d=document.getElementById('__fatal');if(!d){d=document.createElement('div');d.id='__fatal';document.body.appendChild(d);}d.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#2a0d16;color:#ff9ec7;border-top:1px solid #ff6b6b;padding:10px 14px;font:12px/1.5 monospace;white-space:pre-wrap';d.textContent='\u26a0 error: '+((e&&e.message)||e)+'  \u2014 page may be partly broken; send this line to Ryan';}
+window.addEventListener('error',function(ev){showFatal(ev.error||ev.message);});
+window.addEventListener('unhandledrejection',function(ev){showFatal(ev.reason);});
+</script>
 <div id="app">
   <div id="views">
     <div class="view self"><canvas id="cSelf"></canvas><div class="vlabel"><b>◐ YOU · self view</b><br><span class="mut" style="color:var(--muted)">wear anything — local only</span></div><div class="gatelog" id="logSelf"></div></div>
@@ -66,7 +72,7 @@ body{background:var(--bg);color:var(--ink);font-family:'SFMono-Regular',Consolas
   ls(['https://unpkg.com/three@0.147.0/build/three.min.js','https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js','https://cdnjs.cloudflare.com/ajax/libs/three.js/0.147.0/three.min.js'],function(err){
     if(err||!window.THREE){document.getElementById('boot').textContent='Couldn\'t load Three.js.';return;}
     ls(['https://unpkg.com/three@0.147.0/examples/js/controls/OrbitControls.js','https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js'],function(){
-      var b=document.getElementById('boot');if(b)b.remove();start();
+      var b=document.getElementById('boot');if(b)b.remove();try{start();}catch(err){showFatal(err);}
     });
   });
 })();

@@ -31,6 +31,12 @@ body{background:var(--bg);color:var(--ink);font-family:'SFMono-Regular',Consolas
 </style>
 </head>
 <body>
+<script>
+/* fail loud, never silent — surface any error instead of leaving a dead page */
+function showFatal(e){var d=document.getElementById('__fatal');if(!d){d=document.createElement('div');d.id='__fatal';document.body.appendChild(d);}d.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#2a0d16;color:#ff9ec7;border-top:1px solid #ff6b6b;padding:10px 14px;font:12px/1.5 monospace;white-space:pre-wrap';d.textContent='\u26a0 error: '+((e&&e.message)||e)+'  \u2014 page may be partly broken; send this line to Ryan';}
+window.addEventListener('error',function(ev){showFatal(ev.error||ev.message);});
+window.addEventListener('unhandledrejection',function(ev){showFatal(ev.reason);});
+</script>
 <canvas id="scene"></canvas>
 
 <div id="hud">
