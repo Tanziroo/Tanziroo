@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Sir Pip · a very cute suit and top hat</title>
+<style>
+:root{--ink:#f6f1e8;--muted:#a89f93;--gold:#e8c37a;--rose:#ef9aa6;--line:#3a3330;}
+*{box-sizing:border-box;} html,body{margin:0;height:100%;background:#171316;}
+body{color:var(--ink);font-family:'Trebuchet MS','Segoe UI',system-ui,sans-serif;overflow:hidden;-webkit-tap-highlight-color:transparent;}
+#scene{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;}
+#vig{position:fixed;inset:0;pointer-events:none;z-index:2;background:radial-gradient(ellipse 68% 68% at 50% 44%,transparent 45%,rgba(12,9,11,.55) 82%,rgba(12,9,11,.9) 100%);}
+#title{position:fixed;top:16px;left:0;right:0;text-align:center;z-index:5;pointer-events:none;}
+#title h1{margin:0;font-size:26px;letter-spacing:6px;font-weight:700;background:linear-gradient(90deg,var(--gold),var(--rose));-webkit-background-clip:text;background-clip:text;color:transparent;}
+#title p{margin:3px 0 0;font-size:11px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;}
+#panel{position:fixed;bottom:14px;left:0;right:0;z-index:5;display:flex;flex-direction:column;align-items:center;gap:9px;padding:0 12px;}
+.row{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;align-items:center;}
+.lab{font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;width:100%;text-align:center;margin-bottom:-3px;}
+.sw{width:26px;height:26px;border-radius:50%;border:2px solid #0005;cursor:pointer;padding:0;outline:2px solid transparent;transition:.15s;}
+.sw:hover{transform:scale(1.15);} .sw.on{outline:2px solid var(--gold);}
+button.act{background:#2b2429cc;color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:9px 14px;font:inherit;font-size:12.5px;cursor:pointer;backdrop-filter:blur(6px);}
+button.act:hover{border-color:var(--gold);}
+button.act.on{border-color:var(--rose);color:#fff;}
+#boot{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#171316;color:#a89f93;z-index:50;letter-spacing:2px;}
+@media(max-width:600px){#title h1{font-size:19px;letter-spacing:4px;}.sw{width:22px;height:22px;}}
+</style>
+</head>
+<body>
+<script>
+/* fail loud, never silent — surface any error instead of leaving a dead page */
+function showFatal(e){var d=document.getElementById('__fatal');if(!d){d=document.createElement('div');d.id='__fatal';document.body.appendChild(d);}d.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#2a0d16;color:#ff9ec7;border-top:1px solid #ff6b6b;padding:10px 14px;font:12px/1.5 monospace;white-space:pre-wrap';d.textContent='⚠ error: '+((e&&e.message)||e)+'  — page may be partly broken; send this line to Ryan';}
+window.addEventListener('error',function(ev){showFatal(ev.error||ev.message);});
+window.addEventListener('unhandledrejection',function(ev){showFatal(ev.reason);});
+</script>
+<canvas id="scene"></canvas>
+<div id="vig"></div>
+<div id="title"><h1>SIR PIP</h1><p>a very cute suit &amp; top hat</p></div>
+<div id="panel">
+  <div class="row"><span class="lab">suit</span></div>
+  <div class="row" id="suitSw"></div>
+  <div class="row"><span class="lab">hat band</span></div>
+  <div class="row" id="bandSw"></div>
+  <div class="row">
+    <button class="act" id="bTip">🎩 tip the hat</button>
+    <button class="act on" id="bSpin">↻ spin</button>
+    <button class="act on" id="bCane">🦯 cane</button>
+    <button class="act" id="bMono">🧐 monocle</button>
+  </div>
+</div>
+<div id="boot">dressing Sir Pip…</div>
+
+<script>
+(function(){function ls(u,d){var i=0;(function n(){if(i>=u.length){d(new Error('cdn'));return;}var s=document.createElement('script');s.src=u[i++];s.onload=function(){d(null);};s.onerror=n;document.head.appendChild(s);})();}
+  ls(['https://unpkg.com/three@0.147.0/build/three.min.js','https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js','https://cdnjs.cloudflare.com/ajax/libs/three.js/0.147.0/three.min.js'],function(e){
+    if(e||!window.THREE){document.getElementById('boot').textContent='couldn\'t load three.js';return;}
+    ls(['https://unpkg.com/three@0.147.0/examples/js/controls/OrbitControls.js','https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js'],function(){var b=document.getElementById('boot');if(b)b.remove();try{start();}catch(err){showFatal(err);}});
+  });})();
+
+function start(){
+"use strict";
+if(typeof THREE.OrbitControls!=='function'){THREE.OrbitControls=function(c){this.target=new THREE.Vector3();this.update=function(){};};}
+
+/* ---------- stage ---------- */
+var canvas=document.getElementById('scene');
+var renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
+renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+var scene=new THREE.Scene();scene.background=new THREE.Color(0x171316);scene.fog=new THREE.Fog(0x171316,4.5,11);
+var camera=new THREE.PerspectiveCamera(38,1,0.1,100);camera.position.set(0.1,1.35,3.5);
+var controls=new THREE.OrbitControls(camera,canvas);controls.target.set(0,1.05,0);controls.enableDamping=true;controls.dampingFactor=0.07;
+controls.minDistance=1.8;controls.maxDistance=7;controls.maxPolarAngle=Math.PI*0.88;controls.enablePan=false;
+
+/* warm, friendly light rig */
+scene.add(new THREE.HemisphereLight(0xffe9d0,0x2a2026,0.75));
+var key=new THREE.SpotLight(0xfff0d8,90,20,Math.PI/5,0.5,1.6);
+key.position.set(2.4,4.2,3.4);key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.bias=-0.0005;
+scene.add(key,key.target);
+var rimGold=new THREE.PointLight(0xe8c37a,26,12,2);rimGold.position.set(-2.6,1.9,-1.6);scene.add(rimGold);
+var rimRose=new THREE.PointLight(0xef9aa6,22,12,2);rimRose.position.set(2.6,1.4,-1.9);scene.add(rimRose);
+var fill=new THREE.PointLight(0xffffff,10,8,2);fill.position.set(0,1.2,2.4);scene.add(fill);
+
+/* little round stage */
+var floor=new THREE.Mesh(new THREE.CylinderGeometry(2.6,2.6,0.16,64),
+  new THREE.MeshStandardMaterial({color:0x241d22,roughness:0.55,metalness:0.25}));
+floor.position.y=-0.08;floor.receiveShadow=true;scene.add(floor);
+var rug=new THREE.Mesh(new THREE.CircleGeometry(1.15,48),
+  new THREE.MeshStandardMaterial({color:0x5c2233,roughness:0.9}));
+rug.rotation.x=-Math.PI/2;rug.position.y=0.002;rug.receiveShadow=true;scene.add(rug);
+
+/* ---------- materials ---------- */
+var M={
+  suit:  new THREE.MeshStandardMaterial({color:0x2f3a58,roughness:0.62,metalness:0.05}),
+  suitD: new THREE.MeshStandardMaterial({color:0x27304a,roughness:0.58,metalness:0.05}),
+  shirt: new THREE.MeshStandardMaterial({color:0xf7f3ea,roughness:0.75}),
+  skin:  new THREE.MeshStandardMaterial({color:0xf3c9a6,roughness:0.68}),
+  dark:  new THREE.MeshStandardMaterial({color:0x1a1418,roughness:0.35,metalness:0.35}),
+  hat:   new THREE.MeshStandardMaterial({color:0x1d1a20,roughness:0.42,metalness:0.18}),
+  band:  new THREE.MeshStandardMaterial({color:0xb03a52,roughness:0.55}),
+  gold:  new THREE.MeshStandardMaterial({color:0xe8c37a,roughness:0.3,metalness:0.9}),
+  glove: new THREE.MeshStandardMaterial({color:0xf2ece1,roughness:0.8}),
+  blush: new THREE.MeshStandardMaterial({color:0xef8fa0,roughness:0.9,transparent:true,opacity:0.55})
+};
+function S(m){m.castShadow=true;m.receiveShadow=true;return m;}
+function mesh(g,m){return S(new THREE.Mesh(g,m));}
+
+/* ---------- Sir Pip ---------- */
+var pip=new THREE.Group();scene.add(pip);
+
+/* legs + shoes (stubby & cute) */
+[-1,1].forEach(function(s){
+  var leg=mesh(new THREE.CapsuleGeometry(0.075,0.20,8,16),M.suitD);
+  leg.position.set(s*0.115,0.24,0);pip.add(leg);
+  var shoe=mesh(new THREE.SphereGeometry(0.105,20,14),M.dark);
+  shoe.scale.set(1,0.62,1.5);shoe.position.set(s*0.115,0.075,0.05);pip.add(shoe);
+});
+
+/* torso: little tapered jacket */
+var torso=mesh(new THREE.LatheGeometry([
+  [0.215,0.42],[0.235,0.52],[0.245,0.68],[0.238,0.84],[0.205,0.97],[0.145,1.045],[0.10,1.07]
+].map(function(p){return new THREE.Vector2(p[0],p[1]);}),40),M.suit);
+pip.add(torso);
+
+/* shirt front + waistcoat wedge */
+var shirt=mesh(new THREE.LatheGeometry([
+  [0.10,1.05],[0.16,0.98],[0.185,0.86],[0.175,0.70],[0.15,0.58]
+].map(function(p){return new THREE.Vector2(p[0],p[1]);}),24,0,Math.PI*0.62),M.shirt);
+shirt.rotation.y=-Math.PI*0.31;shirt.position.z=0.012;pip.add(shirt);
+
+/* lapels */
+[-1,1].forEach(function(s){
+  var lap=mesh(new THREE.BoxGeometry(0.085,0.30,0.03),M.suitD);
+  lap.position.set(s*0.085,0.90,0.20);lap.rotation.set(0.16,0,s*0.24);pip.add(lap);
+});
+/* buttons */
+[0.74,0.63].forEach(function(y){
+  var b=mesh(new THREE.SphereGeometry(0.018,12,10),M.gold);
+  b.position.set(0,y,0.225);pip.add(b);
+});
+/* pocket square */
+var sq=mesh(new THREE.BoxGeometry(0.055,0.045,0.02),M.band);
+sq.position.set(-0.145,0.855,0.20);sq.rotation.z=0.2;pip.add(sq);
+
+/* bow tie */
+var bow=new THREE.Group();
+[-1,1].forEach(function(s){
+  var w=mesh(new THREE.ConeGeometry(0.055,0.085,4),M.band);
+  w.rotation.set(0,0,s*Math.PI/2);w.position.x=s*0.06;bow.add(w);
+});
+bow.add(mesh(new THREE.SphereGeometry(0.026,12,10),M.band));
+bow.position.set(0,1.075,0.115);pip.add(bow);
+
+/* neck + head */
+var neck=mesh(new THREE.CylinderGeometry(0.062,0.07,0.07,16),M.skin);
+neck.position.y=1.085;pip.add(neck);
+var head=mesh(new THREE.SphereGeometry(0.215,40,32),M.skin);
+head.position.y=1.30;head.scale.set(1,0.97,0.95);pip.add(head);
+/* ears */
+[-1,1].forEach(function(s){
+  var ear=mesh(new THREE.SphereGeometry(0.052,14,12),M.skin);
+  ear.position.set(s*0.205,1.29,0);ear.scale.set(0.55,1,0.85);pip.add(ear);
+});
+
+/* face: eyes (with highlights), brows, smile, blush */
+var eyes=[];
+[-1,1].forEach(function(s){
+  var e=mesh(new THREE.SphereGeometry(0.038,20,16),M.dark);
+  e.position.set(s*0.082,1.315,0.185);e.scale.set(1,1,0.6);pip.add(e);eyes.push(e);
+  var hl=new THREE.Mesh(new THREE.SphereGeometry(0.013,10,8),new THREE.MeshBasicMaterial({color:0xffffff}));
+  hl.position.set(s*0.082+0.013,1.331,0.208);pip.add(hl);
+  var br=mesh(new THREE.BoxGeometry(0.062,0.012,0.012),M.dark);
+  br.position.set(s*0.086,1.377,0.183);br.rotation.z=s*-0.12;pip.add(br);
+  var bl=new THREE.Mesh(new THREE.SphereGeometry(0.042,16,12),M.blush);
+  bl.position.set(s*0.145,1.262,0.155);bl.scale.set(1,0.62,0.35);pip.add(bl);
+});
+var smile=mesh(new THREE.TorusGeometry(0.052,0.0105,10,24,Math.PI*0.92),M.dark);
+smile.position.set(0,1.258,0.188);smile.rotation.set(0,0,Math.PI+Math.PI*0.04);pip.add(smile);
+
+/* arms — jacket sleeve, cuff, glove hand */
+function arm(side){
+  var g=new THREE.Group();
+  var upper=mesh(new THREE.CapsuleGeometry(0.062,0.16,8,14),M.suit);
+  upper.position.set(0,-0.10,0);g.add(upper);
+  var lower=mesh(new THREE.CapsuleGeometry(0.055,0.15,8,14),M.suit);
+  lower.position.set(0,-0.30,0.02);g.add(lower);
+  var cuff=mesh(new THREE.CylinderGeometry(0.058,0.058,0.035,14),M.shirt);
+  cuff.position.set(0,-0.40,0.028);g.add(cuff);
+  var hand=mesh(new THREE.SphereGeometry(0.068,18,14),M.glove);
+  hand.position.set(0,-0.455,0.035);g.add(hand);
+  g.position.set(side*0.235,0.95,0);g.rotation.z=side*0.20;
+  pip.add(g);return g;
+}
+var armL=arm(-1),armR=arm(1);
+
+/* top hat (its own group so it can be tipped) */
+var hat=new THREE.Group();
+var brim=mesh(new THREE.CylinderGeometry(0.30,0.315,0.028,48),M.hat);
+hat.add(brim);
+var crown=mesh(new THREE.CylinderGeometry(0.196,0.205,0.40,40),M.hat);
+crown.position.y=0.212;hat.add(crown);
+var top=mesh(new THREE.CylinderGeometry(0.198,0.198,0.02,40),M.hat);
+top.position.y=0.418;hat.add(top);
+var band=mesh(new THREE.CylinderGeometry(0.209,0.216,0.075,40),M.band);
+band.position.y=0.055;hat.add(band);
+var buckle=mesh(new THREE.BoxGeometry(0.055,0.05,0.015),M.gold);
+buckle.position.set(0,0.055,0.212);hat.add(buckle);
+hat.position.set(0,1.475,-0.01);hat.rotation.z=-0.10;hat.rotation.x=0.05;
+pip.add(hat);
+var hatHome={y:hat.position.y,rz:hat.rotation.z};
+
+/* cane — held in the right hand */
+var cane=new THREE.Group();
+var shaft=mesh(new THREE.CylinderGeometry(0.017,0.015,0.86,14),M.dark);
+shaft.position.y=-0.43;cane.add(shaft);
+var handle=mesh(new THREE.TorusGeometry(0.055,0.017,10,20,Math.PI*1.15),M.gold);
+handle.rotation.y=Math.PI/2;handle.position.y=0.01;cane.add(handle);
+var ferrule=mesh(new THREE.CylinderGeometry(0.019,0.019,0.04,12),M.gold);
+ferrule.position.y=-0.86;cane.add(ferrule);
+cane.position.set(0.30,0.50,0.06);cane.rotation.z=-0.08;pip.add(cane);
+
+/* monocle */
+var mono=new THREE.Group();
+var ring=mesh(new THREE.TorusGeometry(0.055,0.010,10,26),M.gold);
+var lens=new THREE.Mesh(new THREE.CircleGeometry(0.052,26),
+  new THREE.MeshPhysicalMaterial({color:0xdff0ff,transparent:true,opacity:0.28,roughness:0.05,metalness:0,transmission:0.7}));
+mono.add(ring,lens);
+var chain=mesh(new THREE.CylinderGeometry(0.004,0.004,0.20,8),M.gold);
+chain.position.set(0.045,-0.11,0);chain.rotation.z=0.42;mono.add(chain);
+mono.position.set(0.082,1.315,0.215);mono.visible=false;pip.add(mono);
+
+/* sparkles for the hat tip */
+var sparkGeo=new THREE.BufferGeometry();
+var SPARKS=90,spos=new Float32Array(SPARKS*3),svel=[];
+for(var i=0;i<SPARKS;i++){spos[i*3]=0;spos[i*3+1]=-99;spos[i*3+2]=0;svel.push({x:0,y:0,z:0});}
+sparkGeo.setAttribute('position',new THREE.BufferAttribute(spos,3));
+var sparks=new THREE.Points(sparkGeo,new THREE.PointsMaterial({color:0xe8c37a,size:0.032,transparent:true,opacity:0.95,blending:THREE.AdditiveBlending,depthWrite:false}));
+scene.add(sparks);
+var sparkLife=0;
+function burst(){
+  var p=sparkGeo.attributes.position.array;
+  for(var i=0;i<SPARKS;i++){
+    p[i*3]=(Math.random()-0.5)*0.20;
+    p[i*3+1]=1.62+Math.random()*0.10;
+    p[i*3+2]=(Math.random()-0.5)*0.20;
+    var a=Math.random()*Math.PI*2,sp=0.6+Math.random()*1.1;
+    svel[i]={x:Math.cos(a)*sp*0.5,y:1.1+Math.random()*1.3,z:Math.sin(a)*sp*0.5};
+  }
+  sparkGeo.attributes.position.needsUpdate=true;sparkLife=1;
+}
+
+/* ---------- controls ---------- */
+var SUITS=[0x2f3a58,0x3d2b3f,0x22402f,0x5a2731,0x2a2a30,0x6b5a3e,0xd9cfc0,0x1b2a3a];
+var BANDS=[0xb03a52,0xe8c37a,0x2f6f5a,0x7a4a8f,0x1a1418,0xf2ece1];
+function shade(hex,f){var c=new THREE.Color(hex);c.multiplyScalar(f);return c;}
+function mkSw(host,list,onPick,initial){
+  list.forEach(function(hex,i){
+    var b=document.createElement('button');b.className='sw'+(i===initial?' on':'');
+    b.style.background='#'+hex.toString(16).padStart(6,'0');
+    b.onclick=function(){onPick(hex);
+      [].forEach.call(host.children,function(c){c.classList.remove('on');});b.classList.add('on');};
+    host.appendChild(b);
+  });
+}
+mkSw(document.getElementById('suitSw'),SUITS,function(hex){
+  M.suit.color.setHex(hex);M.suitD.color.copy(shade(hex,0.82));},0);
+mkSw(document.getElementById('bandSw'),BANDS,function(hex){M.band.color.setHex(hex);},0);
+
+var spinning=true,tipT=-1;
+document.getElementById('bSpin').onclick=function(){spinning=!spinning;this.classList.toggle('on',spinning);};
+document.getElementById('bTip').onclick=function(){if(tipT<0){tipT=0;burst();}};
+document.getElementById('bCane').onclick=function(){cane.visible=!cane.visible;this.classList.toggle('on',cane.visible);};
+document.getElementById('bMono').onclick=function(){mono.visible=!mono.visible;this.classList.toggle('on',mono.visible);};
+
+/* ---------- animation ---------- */
+var clock=new THREE.Clock(),blinkAt=2.2;
+function resize(){var w=canvas.clientWidth,h=canvas.clientHeight;
+  if(w&&h&&(canvas.width!==w||canvas.height!==h)){renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}}
+
+function frame(){
+  requestAnimationFrame(frame);
+  var dt=Math.min(clock.getDelta(),0.05),t=clock.elapsedTime;
+
+  if(spinning)pip.rotation.y+=dt*0.55;
+  /* idle: gentle breathing bob + sway */
+  pip.position.y=Math.sin(t*1.7)*0.016;
+  pip.rotation.z=Math.sin(t*1.1)*0.017;
+  armL.rotation.x=Math.sin(t*1.7)*0.10;
+  armR.rotation.x=-Math.sin(t*1.7)*0.10;
+
+  /* blink */
+  if(t>blinkAt){var k=(t-blinkAt)/0.13;
+    if(k<1){var sc=Math.abs(Math.cos(k*Math.PI));eyes.forEach(function(e){e.scale.y=0.08+sc*0.92;});}
+    else{eyes.forEach(function(e){e.scale.y=1;});blinkAt=t+2+Math.random()*3;}}
+
+  /* hat tip: lift, spin, settle */
+  if(tipT>=0){
+    tipT+=dt/1.25;
+    if(tipT>=1){tipT=-1;hat.position.y=hatHome.y;hat.rotation.z=hatHome.rz;hat.rotation.y=0;}
+    else{var e=Math.sin(tipT*Math.PI);
+      hat.position.y=hatHome.y+e*0.36;
+      hat.rotation.z=hatHome.rz-e*0.55;
+      hat.rotation.y=tipT*Math.PI*2;}
+  }
+
+  /* sparkles */
+  if(sparkLife>0){
+    sparkLife-=dt*0.75;
+    var p=sparkGeo.attributes.position.array;
+    for(var i=0;i<SPARKS;i++){
+      svel[i].y-=2.4*dt;
+      p[i*3]+=svel[i].x*dt;p[i*3+1]+=svel[i].y*dt;p[i*3+2]+=svel[i].z*dt;
+    }
+    sparkGeo.attributes.position.needsUpdate=true;
+    sparks.material.opacity=Math.max(0,sparkLife);
+    if(sparkLife<=0){var q=sparkGeo.attributes.position.array;for(var j=0;j<SPARKS;j++)q[j*3+1]=-99;sparkGeo.attributes.position.needsUpdate=true;}
+  }
+
+  resize();controls.update();renderer.render(scene,camera);
+}
+frame();
+}
+</script>
+</body>
+</html>
